@@ -34,12 +34,9 @@ evidence from a set of baselines.
 - github.com/tealeg/xlsx - Excel parser
 - github.com/lib/pq - PostgreSQL Go driver
 
-## Installation
-
-
 ## Configuration
 
-- Please email __DL_CFPB_Platform_Operations_Team_ for configuration setup.
+- Please contact __DL_CFPB_Platform_Operations_Team_ for configuration setup.
 
 ## Usage
 

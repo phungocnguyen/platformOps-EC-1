@@ -114,6 +114,8 @@ func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
 
 func main() {
 
+	fmt.Println("- Empowered by",Global_Version)
+
 	var input, output string
 
 	flag.StringVar(&input, "i", "", "Input manifest json file. If missing, program will exit.")
@@ -188,12 +190,12 @@ func writeToFile(baseline []Control, output string) {
 
 	for i := range baseline {
 		fmt.Fprintf(file, "\n%v", s_1)
-		fmt.Fprintf(file, "\n%v", baseline[i].GetTitle())
-		fmt.Fprintf(file, "\n%v", baseline[i].GetBaseline())
-		fmt.Fprintf(file, "\n%v", baseline[i].GetDateExe())
-		fmt.Fprintf(file, "\n%v", baseline[i].GetCommand())
+		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].GetTitle())
+		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].GetBaseline())
+		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].GetDateExe())
+		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].GetCommand())
+		fmt.Fprintf(file, "\nVersion:  %v", Global_Version)
 		fmt.Fprintf(file, "\n%v\n", s_1)
-		//fmt.Fprintf(file,"\n%v\n", baseline[i].GetCommand())
 		fmt.Fprintf(file, "\n%v\n", baseline[i].GetOutput())
 	}
 
@@ -203,4 +205,4 @@ func DateTimeNow() string {
 	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 }
 
-var Global_Version = "ec_agent_0.1"
+var Global_Version = "ec_agent_v.0.1"
