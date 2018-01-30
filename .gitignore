@@ -76,3 +76,8 @@ dist/
 .idea
 *.iml
 
+# Project Specific #
+####################
+configs
+test_data
+/ec_agent
