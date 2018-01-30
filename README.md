@@ -1,27 +1,45 @@
-#### CFPB PlaftformOps Go EC Repo
+### CFPB PlatformOps EC 
 
 
 ## Installation
 
-
+ - Install Go 
+ - Set up GOPATH
+ - Clone this repo to $GOPATH/src
+ 
 ----
 
-# Evidence Collection (EC)
+## Evidence Collection (EC)
 
 **Description**:  Evidence Collection project is written in Golang to support the automated process of collecting 
-evidence from a set of baselines.  
+evidence from a set of baselines. 
 
+**Project code structure**:
+
+ ```
+ - models/
+        - baseline.go
+        - control.go
+        - manifest.go
+ - services/
+        - crudBaselineControl.go
+        - readExcelBaseline.go
+ - ec_agent.go
+ - parse_Excel_convertTo_Json.go
+ - parse_Excel_loadTo_Sql.go
+```
 
 ## Dependencies
 
-- github.com/tealeg/xlsx : Excel parser
-- github.com/lib/pq : PostgreSQL Go driver
+- github.com/tealeg/xlsx - Excel parser
+- github.com/lib/pq - PostgreSQL Go driver
 
 ## Installation
 
 
 ## Configuration
 
+- Please email __DL_CFPB_Platform_Operations_Team_ for configuration setup.
 
 ## Usage
 
