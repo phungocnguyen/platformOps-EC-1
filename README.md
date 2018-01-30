@@ -1,4 +1,4 @@
-#### CFPB Open Source Project Template Instructions
+#### CFPB PlaftformOps Go EC Repo
 
 1. Create a new project.
 2. [Copy these files into the new project](#installation)
@@ -22,12 +22,10 @@ bash -c "$(curl -s https://raw.githubusercontent.com/CFPB/development/master/ope
 
 ----
 
-# Project Title
+# Evidence Collection (EC)
 
-**Description**:  Put a meaningful, short, plain-language description of what
-this project is trying to accomplish and why it matters.
-Describe the problem(s) this project solves.
-Describe how this software can improve the lives of its audience.
+**Description**:  Evidence Collection project is written in Golang to support the automated process of collecting 
+evidence from a set of baselines.  
 
 Other things to include:
 
@@ -44,9 +42,8 @@ Other things to include:
 
 ## Dependencies
 
-Describe any dependencies that must be installed for this software to work.
-This includes programming languages, databases or other storage mechanisms, build tools, frameworks, and so forth.
-If specific versions of other software are required, or known not to work, call that out.
+- github.com/tealeg/xlsx : Excel parser
+- github.com/lib/pq : PostgreSQL Go driver
 
 ## Installation
 
