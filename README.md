@@ -66,4 +66,4 @@ evidence from a set of baselines.
 ## Credits and references
 1. GoLang
 2. Git
-3. [Design Pattern - The Gang of Four](https://www.amazon.com/Design-Patterns-Object-Oriented-Addison-Wesley-Professional-ebook/dp/B000SEIBB8)
+3. [Design Patterns - The Gang of Four](https://www.amazon.com/Design-Patterns-Object-Oriented-Addison-Wesley-Professional-ebook/dp/B000SEIBB8)
