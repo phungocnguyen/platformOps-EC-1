@@ -24,8 +24,7 @@ func ReadControlByBaselineId(db *sql.DB, baseline_id int) {
 }
 
 func readBaselineAll(db *sql.DB) {
-	//rows, err := db.Query("SELECT name FROM baseline.baseline WHERE id = $1", baseline_id)
-	rows, err := db.Query("SELECT name, id FROM baseline.baseline")
+	rows, err := db.Query("SELECT name, id FROM baseline")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +45,7 @@ func readBaselineAll(db *sql.DB) {
 
 func readBaselineById(db *sql.DB, baseline_id int) {
 
-	rows, err := db.Query("SELECT name FROM baseline.baseline WHERE id = $1", baseline_id)
+	rows, err := db.Query("SELECT name FROM baseline WHERE id = $1", baseline_id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,7 +64,7 @@ func readBaselineById(db *sql.DB, baseline_id int) {
 }
 
 func insertBaseline(db *sql.DB, baseline models.Baseline) (gen_id int) {
-	sqlStatement := "INSERT INTO baseline.baseline (name) VALUES ($1) RETURNING id"
+	sqlStatement := "INSERT INTO baseline (name) VALUES ($1) RETURNING id"
 	id := 0
 	err := db.QueryRow(sqlStatement, baseline.GetName()).Scan(&id)
 	if err != nil {
@@ -80,7 +79,7 @@ func readControlByBaselineId(db *sql.DB, baseline_id int) {
 	sqlStatement := `SELECT id, req_id, cis_id, category,
                     requirement, discussion, check_text,
                     fix_text, row_desc, baseline_id
-                    FROM baseline.control WHERE baseline_id=$1;`
+                    FROM control WHERE baseline_id=$1;`
 
 	rows, err := db.Query(sqlStatement, baseline_id)
 	if err != nil {
@@ -103,7 +102,7 @@ func readControlByBaselineId(db *sql.DB, baseline_id int) {
 }
 
 func insertControl(db *sql.DB, control models.Control) (gen_id int) {
-	sqlStatement := `INSERT INTO baseline.control
+	sqlStatement := `INSERT INTO control
                     (req_id, cis_id, category, requirement,
                     discussion, check_text, fix_text, row_desc, baseline_id)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;`

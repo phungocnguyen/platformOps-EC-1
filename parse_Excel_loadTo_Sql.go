@@ -19,6 +19,7 @@ type Config struct {
 	Password string `json:"password"`
 	Sslmode  string `json:"sslmode"`
 	Location string `json:"location"`
+	Schema   string `json:"currentSchema"`
 }
 
 func (c Config) GetDbname() string {
@@ -39,6 +40,10 @@ func (c Config) GetSslmode() string {
 
 func (c Config) GetLocation() string {
 	return c.Location
+}
+
+func (c Config) GetSchema() string {
+	return c.Schema
 }
 
 func main() {
@@ -62,8 +67,6 @@ func main() {
 
 	baseline, controls := services.LoadFromExcel(excelFileName)
 
-	//fmt.Println(baseline)
-	//fmt.Println(controls[0])
 
 	fmt.Println("Loading config file")
 
@@ -76,6 +79,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("Set to schema [%v]", config.GetSchema())
+	setSearchPath(db, config.GetSchema())
 
 	fmt.Println("Inserting Baseline")
 
@@ -126,4 +132,14 @@ func getConnStr(config Config) string {
 	fmt.Println(buffer.String())
 
 	return buffer.String()
+}
+
+func setSearchPath(db *sql.DB, schema string) {
+
+    sqlStatement := "SET search_path TO " + schema
+
+    _, err := db.Exec(sqlStatement)
+    if err != nil {
+    	panic(err)
+    }
 }
