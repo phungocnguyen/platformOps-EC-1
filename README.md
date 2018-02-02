@@ -22,6 +22,7 @@ evidence from a set of baselines.
         - control.go
         - manifest.go
  - services/
+        - commandExe.go
         - crudBaselineControl.go
         - readExcelBaseline.go
  - ec_agent.go
