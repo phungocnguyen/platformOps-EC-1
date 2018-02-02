@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"platformOps-EC/models"
+	"platformOps-EC/services"
 	"strings"
 	"time"
 )
@@ -73,44 +73,7 @@ func getEC_Manifest(manifest string) []models.EC_Manifest {
 	return c
 }
 
-func Execute(output_buffer *bytes.Buffer, stack []*exec.Cmd) (err error) {
-	var error_buffer bytes.Buffer
-	pipe_stack := make([]*io.PipeWriter, len(stack)-1)
-	i := 0
-	for ; i < len(stack)-1; i++ {
-		stdin_pipe, stdout_pipe := io.Pipe()
-		stack[i].Stdout = stdout_pipe
-		stack[i].Stderr = &error_buffer
-		stack[i+1].Stdin = stdin_pipe
-		pipe_stack[i] = stdout_pipe
-	}
-	stack[i].Stdout = output_buffer
-	stack[i].Stderr = &error_buffer
-	if err := call(stack, pipe_stack); err != nil {
-		log.Fatalln("Encounter Error", string(error_buffer.Bytes()), err)
-	}
-	return err
-}
 
-func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
-	if stack[0].Process == nil {
-		if err = stack[0].Start(); err != nil {
-			return err
-		}
-	}
-	if len(stack) > 1 {
-		if err = stack[1].Start(); err != nil {
-			return err
-		}
-		defer func() {
-			if err == nil {
-				pipes[0].Close()
-				err = call(stack[1:], pipes[1:])
-			}
-		}()
-	}
-	return stack[0].Wait()
-}
 
 func main() {
 
@@ -157,7 +120,7 @@ func main() {
 
 		}
 
-		if err := Execute(&b,
+		if err := services.Execute(&b,
 			array); err != nil {
 			log.Fatalln(err)
 		}
@@ -205,4 +168,4 @@ func DateTimeNow() string {
 	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 }
 
-var Global_Version = "ec_agent_v.0.1"
+var Global_Version = "ec_agent_v.0.2"
