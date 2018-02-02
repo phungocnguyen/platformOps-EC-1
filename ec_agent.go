@@ -16,35 +16,15 @@ import (
 )
 
 type Control struct {
-	title    string
-	command  string
-	output   string
-	dateExe  string
-	baseline string
+	Title    string
+	Command  string
+	Baseline string
+	Output   string
+	DateExe  string
 }
 
 func (c Control) SetOutput(output string) {
-	c.output = output
-}
-
-func (c Control) GetTitle() string {
-	return c.title
-}
-
-func (c Control) GetCommand() string {
-	return c.command
-}
-
-func (c Control) GetOutput() string {
-	return c.output
-}
-
-func (c Control) GetDateExe() string {
-	return c.dateExe
-}
-
-func (c Control) GetBaseline() string {
-	return c.baseline
+	c.Output = output
 }
 
 func toJson(p interface{}) string {
@@ -107,7 +87,7 @@ func main() {
 	for _, manifest := range baseline {
 		var b bytes.Buffer
 
-		data := manifest.GetCommand()
+		data := manifest.Command
 
 		result := strings.Split(data, "|")
 		array := make([]*exec.Cmd, len(result))
@@ -127,15 +107,15 @@ func main() {
 
 		s := b.String()
 
-		co := Control{title: manifest.GetTitle(),
-			command:  manifest.GetCommand(),
-			output:   s,
-			dateExe:  DateTimeNow(),
-			baseline: manifest.GetBaseline()}
+		co := Control{Title: manifest.Title,
+			Command:  manifest.Command,
+			Output:   s,
+			DateExe:  DateTimeNow(),
+			Baseline: manifest.Baseline}
 
 		controlO = append(controlO, co)
 
-		fmt.Println("- Done executing", "[", manifest.GetTitle(), "]")
+		fmt.Println("- Done executing", "[", manifest.Title, "]")
 
 	}
 	writeToFile(controlO, output)
@@ -153,13 +133,13 @@ func writeToFile(baseline []Control, output string) {
 
 	for i := range baseline {
 		fmt.Fprintf(file, "\n%v", s_1)
-		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].GetTitle())
-		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].GetBaseline())
-		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].GetDateExe())
-		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].GetCommand())
+		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
+		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
+		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
+		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
 		fmt.Fprintf(file, "\nVersion:  %v", models.EC_version)
 		fmt.Fprintf(file, "\n%v\n", s_1)
-		fmt.Fprintf(file, "\n%v\n", baseline[i].GetOutput())
+		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
 	}
 
 }

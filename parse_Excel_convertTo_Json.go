@@ -36,8 +36,8 @@ func main() {
 
 	for _, c := range controls {
 
-		m := models.EC_Manifest{Title: c.GetCategory(),
-			Baseline: baseline.GetName() + " at Req# " + c.GetRow_desc()}
+		m := models.EC_Manifest{Title: c.Category,
+			Baseline: baseline.Name + " at Req# " + c.Row_desc}
 		manifest = append(manifest, m)
 
 	}

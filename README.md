@@ -20,6 +20,7 @@ evidence from a set of baselines.
  - models/
         - baseline.go
         - control.go
+        - ecGlobalVars.go
         - manifest.go
  - services/
         - commandExe.go

@@ -107,10 +107,10 @@ func insertControl(db *sql.DB, control models.Control) (gen_id int) {
                     discussion, check_text, fix_text, row_desc, baseline_id)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;`
 	id := 0
-	err := db.QueryRow(sqlStatement, control.GetReq_id(), control.GetCis_id(),
-		control.GetCategory(), control.GetRequirement(), control.GetDiscussion(),
-		control.GetCheck_text(), control.GetFix_text(), control.GetRow_desc(),
-		control.GetBaseline_id()).Scan(&id)
+	err := db.QueryRow(sqlStatement, control.Req_id, control.Cis_id,
+		control.Category, control.Requirement, control.Discussion,
+		control.Check_text, control.Fix_text, control.Row_desc,
+		control.Baseline_id).Scan(&id)
 	if err != nil {
 		panic(err)
 	}

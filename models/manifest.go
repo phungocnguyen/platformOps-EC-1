@@ -12,18 +12,6 @@ type EC_Manifest struct {
 	Baseline string `json:"baseline"`
 }
 
-func (c EC_Manifest) GetCommand() string {
-	return c.Command
-}
-
-func (c EC_Manifest) GetTitle() string {
-	return c.Title
-}
-
-func (c EC_Manifest) GetBaseline() string {
-	return c.Baseline
-}
-
 func (p EC_Manifest) ToString() string {
 	return ToJson(p)
 }
