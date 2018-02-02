@@ -15,27 +15,6 @@ import (
 	"time"
 )
 
-type Control struct {
-	Title    string
-	Command  string
-	Baseline string
-	Output   string
-	DateExe  string
-}
-
-func (c Control) SetOutput(output string) {
-	c.Output = output
-}
-
-func toJson(p interface{}) string {
-	bytes, err := json.Marshal(p)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-
-	return string(bytes)
-}
 
 func getEC_Manifest(manifest string) []models.EC_Manifest {
 	fmt.Println("- Parsing manifest", "[", manifest, "]")
@@ -75,7 +54,7 @@ func main() {
 
 	}
 
-	var controlO []Control
+	var manifest_results []models.EC_Manifest_Result
 
 	baseline := getEC_Manifest(input)
 	if len(baseline) < 1 {
@@ -107,23 +86,22 @@ func main() {
 
 		s := b.String()
 
-		co := Control{Title: manifest.Title,
-			Command:  manifest.Command,
-			Output:   s,
-			DateExe:  DateTimeNow(),
-			Baseline: manifest.Baseline}
+		result_manifest := models.EC_Manifest_Result{
+		                    models.EC_Manifest{manifest.Title, manifest.Command, manifest.Baseline},
+			                s,
+			                DateTimeNow()}
 
-		controlO = append(controlO, co)
+		manifest_results = append(manifest_results, result_manifest)
 
 		fmt.Println("- Done executing", "[", manifest.Title, "]")
 
 	}
-	writeToFile(controlO, output)
+	writeToFile(manifest_results, output)
 	fmt.Println("- Done writing to", "[", output, "]")
 
 }
 
-func writeToFile(baseline []Control, output string) {
+func writeToFile(baseline []models.EC_Manifest_Result, output string) {
 	s_1 := "##################################"
 	file, err := os.Create(output)
 	if err != nil {

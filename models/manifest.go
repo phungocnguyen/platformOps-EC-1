@@ -12,6 +12,13 @@ type EC_Manifest struct {
 	Baseline string `json:"baseline"`
 }
 
+type EC_Manifest_Result struct {
+    EC_Manifest
+    Output   string
+    DateExe  string
+
+}
+
 func (p EC_Manifest) ToString() string {
 	return ToJson(p)
 }
