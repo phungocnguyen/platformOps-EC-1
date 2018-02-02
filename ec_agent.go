@@ -87,7 +87,7 @@ func main() {
 		s := b.String()
 
 		result_manifest := models.EC_Manifest_Result{
-		                    models.EC_Manifest{manifest.Title, manifest.Command, manifest.Baseline},
+		                    models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 			                s,
 			                DateTimeNow()}
 
@@ -111,6 +111,7 @@ func writeToFile(baseline []models.EC_Manifest_Result, output string) {
 
 	for i := range baseline {
 		fmt.Fprintf(file, "\n%v", s_1)
+		fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
 		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
 		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
 		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)

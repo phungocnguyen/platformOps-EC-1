@@ -7,6 +7,7 @@ import (
 )
 
 type EC_Manifest struct {
+    ReqId    int    `json:"reqId"`
 	Title    string `json:"title"`
 	Command  string `json:"command"`
 	Baseline string `json:"baseline"`
@@ -14,8 +15,8 @@ type EC_Manifest struct {
 
 type EC_Manifest_Result struct {
     EC_Manifest
-    Output   string
-    DateExe  string
+    Output   string `json:"output"`
+    DateExe  string `json:"dateExe"`
 
 }
 
