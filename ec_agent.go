@@ -77,7 +77,7 @@ func getEC_Manifest(manifest string) []models.EC_Manifest {
 
 func main() {
 
-	fmt.Println("- Empowered by",Global_Version)
+	fmt.Println("- Empowered by", models.EC_version)
 
 	var input, output string
 
@@ -157,7 +157,7 @@ func writeToFile(baseline []Control, output string) {
 		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].GetBaseline())
 		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].GetDateExe())
 		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].GetCommand())
-		fmt.Fprintf(file, "\nVersion:  %v", Global_Version)
+		fmt.Fprintf(file, "\nVersion:  %v", models.EC_version)
 		fmt.Fprintf(file, "\n%v\n", s_1)
 		fmt.Fprintf(file, "\n%v\n", baseline[i].GetOutput())
 	}
@@ -168,4 +168,3 @@ func DateTimeNow() string {
 	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 }
 
-var Global_Version = "ec_agent_v.0.2"
