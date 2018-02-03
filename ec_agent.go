@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"platformOps-EC/models"
 	"platformOps-EC/services"
 	"strings"
@@ -56,6 +57,8 @@ func main() {
 
 	var manifest_results []models.EC_Manifest_Result
 
+	var manifestErrors []models.EC_Manifest_Result
+
 	baseline := getEC_Manifest(input)
 	if len(baseline) < 1 {
 		os.Exit(1)
@@ -79,26 +82,42 @@ func main() {
 
 		}
 
-		if err := services.Execute(&b,
-			array); err != nil {
+		errorOutput := services.Execute(&b, array)
+
+		/*if err != nil {
 			log.Fatalln(err)
 		}
+		*/
 
 		s := b.String()
 
 		result_manifest := models.EC_Manifest_Result{
 		                    models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 			                s,
-			                DateTimeNow()}
+			                dateTimeNow()}
 
 		manifest_results = append(manifest_results, result_manifest)
+
+		if errorOutput!= "" {
+			errorManifest := models.EC_Manifest_Result{
+				models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
+				errorOutput,
+				dateTimeNow()}
+			manifestErrors = append(manifestErrors, errorManifest)
+		}
 
 		fmt.Println("- Done executing", "[", manifest.Title, "]")
 
 	}
+
 	writeToFile(manifest_results, output)
 	fmt.Println("- Done writing to", "[", output, "]")
 
+	if len(manifestErrors) > 0 {
+		errorFile := getErrorFileName(output)
+		writeToFile(manifestErrors, errorFile)
+		fmt.Println("- Done writing error to", "[", errorFile, "]")
+	}
 }
 
 func writeToFile(baseline []models.EC_Manifest_Result, output string) {
@@ -123,7 +142,11 @@ func writeToFile(baseline []models.EC_Manifest_Result, output string) {
 
 }
 
-func DateTimeNow() string {
+func dateTimeNow() string {
 	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+}
+
+func getErrorFileName(output string) string{
+	return filepath.Join(filepath.Dir(output), "error_"+filepath.Base(output))
 }
 

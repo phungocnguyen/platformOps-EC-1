@@ -3,11 +3,11 @@ package services
 import(
 	"io"
 	"bytes"
-	"log"
+	"fmt"
 	"os/exec"
 )
 
-func Execute(output_buffer *bytes.Buffer, stack []*exec.Cmd) (err error) {
+func Execute(output_buffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string) {
 	var error_buffer bytes.Buffer
 	pipe_stack := make([]*io.PipeWriter, len(stack)-1)
 	i := 0
@@ -21,9 +21,9 @@ func Execute(output_buffer *bytes.Buffer, stack []*exec.Cmd) (err error) {
 	stack[i].Stdout = output_buffer
 	stack[i].Stderr = &error_buffer
 	if err := call(stack, pipe_stack); err != nil {
-		log.Fatalln("Encounter Error", string(error_buffer.Bytes()), err)
+		fmt.Println ("Encounter Error", string(error_buffer.Bytes()), err)
 	}
-	return err
+	return string(error_buffer.Bytes())
 }
 
 func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
