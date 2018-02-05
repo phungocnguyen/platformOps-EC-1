@@ -67,7 +67,6 @@ func main() {
 
 	baseline, controls := services.LoadFromExcel(excelFileName)
 
-
 	fmt.Println("Loading config file")
 
 	config := getConfig(configFile)
@@ -136,10 +135,10 @@ func getConnStr(config Config) string {
 
 func setSearchPath(db *sql.DB, schema string) {
 
-    sqlStatement := "SET search_path TO " + schema
+	sqlStatement := "SET search_path TO " + schema
 
-    _, err := db.Exec(sqlStatement)
-    if err != nil {
-    	panic(err)
-    }
+	_, err := db.Exec(sqlStatement)
+	if err != nil {
+		panic(err)
+	}
 }

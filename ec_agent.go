@@ -15,7 +15,6 @@ import (
 	"time"
 )
 
-
 func getEC_Manifest(manifest string) []models.EC_Manifest {
 	fmt.Println("- Parsing manifest", "[", manifest, "]")
 	raw, err := ioutil.ReadFile(manifest)
@@ -31,8 +30,6 @@ func getEC_Manifest(manifest string) []models.EC_Manifest {
 	}
 	return c
 }
-
-
 
 func main() {
 
@@ -87,9 +84,9 @@ func main() {
 		s := b.String()
 
 		result_manifest := models.EC_Manifest_Result{
-		                    models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-			                s,
-			                DateTimeNow()}
+			models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
+			s,
+			DateTimeNow()}
 
 		manifest_results = append(manifest_results, result_manifest)
 
@@ -126,4 +123,3 @@ func writeToFile(baseline []models.EC_Manifest_Result, output string) {
 func DateTimeNow() string {
 	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 }
-
