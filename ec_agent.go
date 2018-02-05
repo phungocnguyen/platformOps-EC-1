@@ -37,7 +37,7 @@ func getECManifest(manifest string) []models.ECManifest {
 
 func main() {
 
-	fmt.Println("- Empowered by", models.EC_version)
+	fmt.Println("- Empowered by", models.ECVersion)
 
 	var input, output string
 
@@ -137,7 +137,7 @@ func writeToFile(baseline []models.ECManifestResult, output string) {
 		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
 		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
 		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
-		fmt.Fprintf(file, "\nVersion:  %v", models.EC_version)
+		fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
 		fmt.Fprintf(file, "\n%v\n", hashString)
 		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
 	}

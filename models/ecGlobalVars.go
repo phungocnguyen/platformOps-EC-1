@@ -1,7 +1,7 @@
 package models
 
 
-var EC_version = "ec_agent v.1.1"
+var ECVersion = "ec_agent v.1.1.2"
 
 
 
