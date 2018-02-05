@@ -91,7 +91,7 @@ func main() {
 
 	fmt.Println("Inserting controls")
 	for i := 0; i < len(controls); i++ {
-		controls[i].SetBaseline_id(baseline_id)
+		controls[i].SetBaselineId(baseline_id)
 		services.InsertControl(db, controls[i])
 
 	}

@@ -4,31 +4,31 @@ import ()
 
 type Control struct {
 	Id          int
-	Req_id      int
-	Cis_id      string
+	ReqId       int
+	CisId       string
 	Category    string
 	Requirement string
 	Discussion  string
-	Check_text  string
-	Fix_text    string
-	Row_desc    string
-	Baseline_id int
+	CheckText   string
+	FixText     string
+	RowDesc     string
+	BaselineId  int
 }
 
 func (c *Control) SetId(id int) {
 	c.Id = id
 }
 
-func (c *Control) SetReq_id(req_id int) {
-	c.Req_id = req_id
+func (c *Control) SetReqId(reqId int) {
+	c.ReqId = reqId
 }
 
-func (c *Control) SetBaseline_id(baseline_id int) {
-	c.Baseline_id = baseline_id
+func (c *Control) SetBaselineId(baselineId int) {
+	c.BaselineId = baselineId
 }
 
-func (c *Control) SetCis_id(cis_id string) {
-	c.Cis_id = cis_id
+func (c *Control) SetCisId(cisId string) {
+	c.CisId = cisId
 }
 
 func (c *Control) SetCategory(category string) {
@@ -43,14 +43,14 @@ func (c *Control) SetDiscussion(discussion string) {
 	c.Discussion = discussion
 }
 
-func (c *Control) SetCheck_text(check_text string) {
-	c.Check_text = check_text
+func (c *Control) SetCheckText(checkText string) {
+	c.CheckText = checkText
 }
 
-func (c *Control) SetFix_text(fix_text string) {
-	c.Fix_text = fix_text
+func (c *Control) SetFixText(fixText string) {
+	c.FixText = fixText
 }
 
-func (c *Control) SetRow_desc(row_desc string) {
-	c.Row_desc = row_desc
+func (c *Control) SetRowDesc(rowDesc string) {
+	c.RowDesc = rowDesc
 }

@@ -17,7 +17,7 @@ import (
 )
 
 
-func getEC_Manifest(manifest string) []models.EC_Manifest {
+func getECManifest(manifest string) []models.ECManifest {
 	fmt.Println("- Parsing manifest", "[", manifest, "]")
 	raw, err := ioutil.ReadFile(manifest)
 	if err != nil {
@@ -25,7 +25,7 @@ func getEC_Manifest(manifest string) []models.EC_Manifest {
 		os.Exit(1)
 	}
 
-	var c []models.EC_Manifest
+	var c []models.ECManifest
 	errj := json.Unmarshal(raw, &c)
 	if errj != nil {
 		fmt.Println("error parsing json input", err)
@@ -55,11 +55,11 @@ func main() {
 
 	}
 
-	var manifest_results []models.EC_Manifest_Result
+	var manifestResults []models.ECManifestResult
 
-	var manifestErrors []models.EC_Manifest_Result
+	var manifestErrors []models.ECManifestResult
 
-	baseline := getEC_Manifest(input)
+	baseline := getECManifest(input)
 	if len(baseline) < 1 {
 		os.Exit(1)
 	}
@@ -91,16 +91,16 @@ func main() {
 
 		s := b.String()
 
-		result_manifest := models.EC_Manifest_Result{
-		                    models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
+		resultManifest := models.ECManifestResult{
+		                    models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 			                s,
 			                dateTimeNow()}
 
-		manifest_results = append(manifest_results, result_manifest)
+		manifestResults = append(manifestResults, resultManifest)
 
 		if errorOutput!= "" {
-			errorManifest := models.EC_Manifest_Result{
-				models.EC_Manifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
+			errorManifest := models.ECManifestResult{
+				models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 				errorOutput,
 				dateTimeNow()}
 			manifestErrors = append(manifestErrors, errorManifest)
@@ -110,7 +110,7 @@ func main() {
 
 	}
 
-	writeToFile(manifest_results, output)
+	writeToFile(manifestResults, output)
 	fmt.Println("- Done writing to", "[", output, "]")
 
 	if len(manifestErrors) > 0 {
@@ -120,7 +120,7 @@ func main() {
 	}
 }
 
-func writeToFile(baseline []models.EC_Manifest_Result, output string) {
+func writeToFile(baseline []models.ECManifestResult, output string) {
 	s_1 := "##################################"
 	file, err := os.Create(output)
 	if err != nil {
