@@ -31,6 +31,14 @@ evidence from a set of baselines.
  - parse_Excel_loadTo_Sql.go
 ```
 
+**Convention**:
+- Class names should be nouns in UpperCamelCase.
+- Methods should be verbs in lowerCamelCase. 
+- Local variables, instance variables, and class variables are also written in lowerCamelCase.
+- Constants should be written in uppercase characters separated by underscores.
+- 4 spaces for an indentation.
+- When in doubt, see [Effective Go](https://golang.org/doc/effective_go.html#mixed-caps)
+
 ## Dependencies
 
 - github.com/tealeg/xlsx - Excel parser

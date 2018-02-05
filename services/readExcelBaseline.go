@@ -31,15 +31,15 @@ func loadControl(file string) (controls []models.Control) {
 
 		cells := row.Cells
 
-		req_id, err := cells[0].Int()
+		reqId, err := cells[0].Int()
 		if err != nil {
-			fmt.Println("error reading req_id")
+			fmt.Println("error reading reqId")
 		}
 
-		control := models.Control{Req_id: req_id, Cis_id: cells[1].String(), Category: cells[2].String(),
+		control := models.Control{ReqId: reqId, CisId: cells[1].String(), Category: cells[2].String(),
 			Requirement: cells[3].String(), Discussion: cells[4].String(),
-			Check_text: cells[5].String(), Fix_text: cells[6].String(),
-			Row_desc: cells[0].String()}
+			CheckText: cells[5].String(), FixText: cells[6].String(),
+			RowDesc: cells[0].String()}
 
 		controls = append(controls, control)
 	}

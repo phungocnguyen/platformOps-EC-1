@@ -6,21 +6,21 @@ import (
 	"os"
 )
 
-type EC_Manifest struct {
+type ECManifest struct {
     ReqId    int    `json:"reqId"`
 	Title    string `json:"title"`
 	Command  string `json:"command"`
 	Baseline string `json:"baseline"`
 }
 
-type EC_Manifest_Result struct {
-    EC_Manifest
+type ECManifestResult struct {
+	ECManifest
     Output   string `json:"output"`
     DateExe  string `json:"dateExe"`
 
 }
 
-func (p EC_Manifest) ToString() string {
+func (p ECManifest) ToString() string {
 	return ToJson(p)
 }
 

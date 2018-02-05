@@ -79,7 +79,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Set to schema [%v]", config.GetSchema())
+	fmt.Printf("Set to schema [%v]\n", config.GetSchema())
 	setSearchPath(db, config.GetSchema())
 
 	fmt.Println("Inserting Baseline")
@@ -90,7 +90,7 @@ func main() {
 
 	fmt.Println("Inserting controls")
 	for i := 0; i < len(controls); i++ {
-		controls[i].SetBaseline_id(baseline_id)
+		controls[i].SetBaselineId(baseline_id)
 		services.InsertControl(db, controls[i])
 
 	}

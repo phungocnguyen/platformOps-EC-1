@@ -30,14 +30,14 @@ func main() {
 	fmt.Println("Loading Excel file ", excelFileName)
 
 	baseline, controls := services.LoadFromExcel(excelFileName)
-	var manifest []models.EC_Manifest
+	var manifest []models.ECManifest
 
 	fmt.Println("Converting to Json object")
 
 	for _, c := range controls {
 
-		m := models.EC_Manifest{ReqId: c.Req_id, Title: c.Category,
-			Baseline: baseline.Name + " at Req# " + c.Row_desc}
+		m := models.ECManifest{ReqId: c.ReqId, Title: c.Category,
+			Baseline: baseline.Name}
 		manifest = append(manifest, m)
 
 	}
@@ -54,6 +54,6 @@ func main() {
 
 	fmt.Fprintf(file, "%v", models.ToJson(manifest))
 
-	fmt.Println("Done writing to output file at ", output)
+	fmt.Printf("Done writing to output file at [%v]\n", output)
 
 }

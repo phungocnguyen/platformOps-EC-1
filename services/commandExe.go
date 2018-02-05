@@ -3,27 +3,27 @@ package services
 import(
 	"io"
 	"bytes"
-	"log"
+	"fmt"
 	"os/exec"
 )
 
-func Execute(output_buffer *bytes.Buffer, stack []*exec.Cmd) (err error) {
-	var error_buffer bytes.Buffer
-	pipe_stack := make([]*io.PipeWriter, len(stack)-1)
+func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string) {
+	var errorBuffer bytes.Buffer
+	pipeStack := make([]*io.PipeWriter, len(stack)-1)
 	i := 0
 	for ; i < len(stack)-1; i++ {
-		stdin_pipe, stdout_pipe := io.Pipe()
-		stack[i].Stdout = stdout_pipe
-		stack[i].Stderr = &error_buffer
-		stack[i+1].Stdin = stdin_pipe
-		pipe_stack[i] = stdout_pipe
+		stdinPipe, stdoutPipe := io.Pipe()
+		stack[i].Stdout = stdoutPipe
+		stack[i].Stderr = &errorBuffer
+		stack[i+1].Stdin = stdinPipe
+		pipeStack[i] = stdoutPipe
 	}
-	stack[i].Stdout = output_buffer
-	stack[i].Stderr = &error_buffer
-	if err := call(stack, pipe_stack); err != nil {
-		log.Fatalln("Encounter Error", string(error_buffer.Bytes()), err)
+	stack[i].Stdout = outputBuffer
+	stack[i].Stderr = &errorBuffer
+	if err := call(stack, pipeStack); err != nil {
+		fmt.Println ("Encounter Error", string(errorBuffer.Bytes()), err)
 	}
-	return err
+	return string(errorBuffer.Bytes())
 }
 
 func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
