@@ -54,6 +54,6 @@ func main() {
 
 	fmt.Fprintf(file, "%v", models.ToJson(manifest))
 
-	fmt.Println("Done writing to output file at ", output)
+	fmt.Printf("Done writing to output file at [%v]\n", output)
 
 }

@@ -36,7 +36,7 @@ evidence from a set of baselines.
 - Methods should be verbs in lowerCamelCase. 
 - Local variables, instance variables, and class variables are also written in lowerCamelCase.
 - Constants should be written in uppercase characters separated by underscores.
-- 4 spaces for indentations.
+- 4 spaces for an indentation.
 - When in doubt, see [Effective Go](https://golang.org/doc/effective_go.html#mixed-caps)
 
 ## Dependencies

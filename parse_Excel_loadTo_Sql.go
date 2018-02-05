@@ -80,7 +80,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Set to schema [%v]", config.GetSchema())
+	fmt.Printf("Set to schema [%v]\n", config.GetSchema())
 	setSearchPath(db, config.GetSchema())
 
 	fmt.Println("Inserting Baseline")

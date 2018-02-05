@@ -18,7 +18,7 @@ import (
 
 
 func getECManifest(manifest string) []models.ECManifest {
-	fmt.Println("- Parsing manifest", "[", manifest, "]")
+	fmt.Printf("- Parsing manifest [%v]\n", manifest)
 	raw, err := ioutil.ReadFile(manifest)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -26,8 +26,8 @@ func getECManifest(manifest string) []models.ECManifest {
 	}
 
 	var c []models.ECManifest
-	errj := json.Unmarshal(raw, &c)
-	if errj != nil {
+	errUnmarshal := json.Unmarshal(raw, &c)
+	if errUnmarshal != nil {
 		fmt.Println("error parsing json input", err)
 	}
 	return c
@@ -71,6 +71,8 @@ func main() {
 
 		data := manifest.Command
 
+		fmt.Printf("- Executing [%v]\n", manifest.Title)
+
 		result := strings.Split(data, "|")
 		array := make([]*exec.Cmd, len(result))
 		for i := range result {
@@ -92,7 +94,7 @@ func main() {
 		s := b.String()
 
 		resultManifest := models.ECManifestResult{
-		                    models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
+		                    models.ECManifest{manifest.ReqId,manifest.Title, manifest.Command, manifest.Baseline},
 			                s,
 			                dateTimeNow()}
 
@@ -106,22 +108,22 @@ func main() {
 			manifestErrors = append(manifestErrors, errorManifest)
 		}
 
-		fmt.Println("- Done executing", "[", manifest.Title, "]")
+
 
 	}
 
 	writeToFile(manifestResults, output)
-	fmt.Println("- Done writing to", "[", output, "]")
+	fmt.Printf("- Done writing to [%v]\n", output)
 
 	if len(manifestErrors) > 0 {
 		errorFile := getErrorFileName(output)
 		writeToFile(manifestErrors, errorFile)
-		fmt.Println("- Done writing error to", "[", errorFile, "]")
+		fmt.Printf("- Done writing error to [%v]\n", errorFile)
 	}
 }
 
 func writeToFile(baseline []models.ECManifestResult, output string) {
-	s_1 := "##################################"
+	hashString := "##################################"
 	file, err := os.Create(output)
 	if err != nil {
 		log.Fatal("Cannot create file", err)
@@ -129,14 +131,14 @@ func writeToFile(baseline []models.ECManifestResult, output string) {
 	defer file.Close()
 
 	for i := range baseline {
-		fmt.Fprintf(file, "\n%v", s_1)
+		fmt.Fprintf(file, "\n%v", hashString)
 		fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
 		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
 		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
 		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
 		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
 		fmt.Fprintf(file, "\nVersion:  %v", models.EC_version)
-		fmt.Fprintf(file, "\n%v\n", s_1)
+		fmt.Fprintf(file, "\n%v\n", hashString)
 		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
 	}
 
