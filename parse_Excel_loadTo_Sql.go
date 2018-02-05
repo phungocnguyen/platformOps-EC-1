@@ -16,35 +16,12 @@ import (
 type Config struct {
 	Dbname   string `json:"dbname"`
 	Username string `json:"username"`
-	Password string `json:"password"`
+	Password string `json:"-"`
 	Sslmode  string `json:"sslmode"`
 	Location string `json:"location"`
 	Schema   string `json:"currentSchema"`
 }
 
-func (c Config) GetDbname() string {
-	return c.Dbname
-}
-
-func (c Config) GetUsername() string {
-	return c.Username
-}
-
-func (c Config) GetPassword() string {
-	return c.Password
-}
-
-func (c Config) GetSslmode() string {
-	return c.Sslmode
-}
-
-func (c Config) GetLocation() string {
-	return c.Location
-}
-
-func (c Config) GetSchema() string {
-	return c.Schema
-}
 
 func main() {
 	var excelFileName, configFile string
@@ -79,8 +56,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Set to schema [%v]\n", config.GetSchema())
-	setSearchPath(db, config.GetSchema())
+	fmt.Printf("Set to schema [%v]\n", config.Schemago)
+	setSearchPath(db, config.Schema)
 
 	fmt.Println("Inserting Baseline")
 
@@ -118,15 +95,15 @@ func getConfig(configFile string) Config {
 func getConnStr(config Config) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("postgres://")
-	buffer.WriteString(config.GetUsername())
+	buffer.WriteString(config.Username)
 	buffer.WriteString(":")
-	buffer.WriteString(config.GetPassword())
+	buffer.WriteString(config.Password)
 	buffer.WriteString("@")
-	buffer.WriteString(config.GetLocation())
+	buffer.WriteString(config.Location)
 	buffer.WriteString("/")
-	buffer.WriteString(config.GetDbname())
+	buffer.WriteString(config.Dbname)
 	buffer.WriteString("?sslmode=")
-	buffer.WriteString(config.GetSslmode())
+	buffer.WriteString(config.Sslmode)
 
 	fmt.Println(buffer.String())
 
