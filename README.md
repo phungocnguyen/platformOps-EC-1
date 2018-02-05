@@ -37,6 +37,7 @@ evidence from a set of baselines.
 - Local variables, instance variables, and class variables are also written in lowerCamelCase.
 - Constants should be written in uppercase characters separated by underscores.
 - 4 space indentation.
+- When in doubt, see [Effective Go](https://golang.org/doc/effective_go.html#mixed-caps)
 
 ## Dependencies
 
