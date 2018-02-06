@@ -56,7 +56,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Set to schema [%v]\n", config.Schemago)
+	fmt.Printf("Set to schema [%v]\n", config.Schema)
 	setSearchPath(db, config.Schema)
 
 	fmt.Println("Inserting Baseline")
