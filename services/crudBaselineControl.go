@@ -23,6 +23,16 @@ func ReadControlByBaselineId(db *sql.DB, baselineId int) {
 	readControlByBaselineId(db, baselineId)
 }
 
+func SetSearchPath(db *sql.DB, schema string) {
+
+	sqlStatement := "SET search_path TO " + schema
+
+	_, err := db.Exec(sqlStatement)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func readBaselineAll(db *sql.DB) {
 	rows, err := db.Query("SELECT name, id FROM baseline")
 	if err != nil {
@@ -73,6 +83,66 @@ func insertBaseline(db *sql.DB, baseline models.Baseline) (genId int) {
 	fmt.Println("New record ID is:", id)
 	baseline.SetId(id)
 	return id
+}
+
+func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest{
+	SetSearchPath(db, "baseline")
+
+	sqlStatement := `SELECT c.req_id, c.category, b.name, c.baseline_id, c.id
+                    FROM control c, baseline b WHERE c.baseline_id=b.id AND b.id=$1;`
+
+	rows, err := db.Query(sqlStatement, baselineId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	var manifests []models.ECManifest
+	for rows.Next() {
+		var category, baselineName string
+		var reqId, controlId int
+		if err := rows.Scan(&reqId, &category, &baselineName, &baselineId, &controlId); err != nil {
+			log.Fatal(err)
+		}
+
+		command := GetCommandByControlId(db, controlId)
+		manifest :=  models.ECManifest{reqId, category, command.Cmd, baselineName}
+		manifests = append(manifests, manifest)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return manifests
+}
+
+func GetCommandByControlId (db *sql.DB, controlId int) models.Command {
+	SetSearchPath(db, "baseline")
+	sqlStatement :=    `SELECT id, cmd, exec_order
+					 	FROM  command  
+						WHERE control_id = $1;`
+
+	rows, err := db.Query(sqlStatement, controlId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	var command models.Command
+
+	for rows.Next() {
+		var cmd string
+		var id, exeOrder int
+		if err := rows.Scan(&id, &cmd, &exeOrder); err != nil {
+			log.Fatal(err)
+		}
+		command = models.Command{Id: id, Cmd: cmd, ExeOrder: exeOrder, ControlId:controlId}
+
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return command
+
+
+
 }
 
 func readControlByBaselineId(db *sql.DB, baselineId int) {

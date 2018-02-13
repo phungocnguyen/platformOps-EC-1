@@ -15,3 +15,10 @@ func (b *Baseline) SetName(name string) {
         b.Name = name
 }
 
+
+type Command struct {
+        Id              int
+        Cmd             string
+        ExeOrder        int
+        ControlId       int
+}
