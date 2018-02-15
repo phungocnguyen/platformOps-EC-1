@@ -90,9 +90,9 @@ func CollectEvidence (baseline []models.ECManifest)  ([]models.ECManifestResult,
 			s = b.String()
 		}
 		resultManifest := models.ECManifestResult{
-		                    models.ECManifest{manifest.ReqId,manifest.Title, manifest.Command, manifest.Baseline},
-			                s,
-			                dateTimeNow()}
+			models.ECManifest{manifest.ReqId,manifest.Title, manifest.Command, manifest.Baseline},
+			s,
+			dateTimeNow()}
 
 		manifestResults = append(manifestResults, resultManifest)
 
@@ -186,3 +186,4 @@ func main() {
 		fmt.Printf("- Done writing error to [%v]\n", errorFile)
 	}
 }
+
