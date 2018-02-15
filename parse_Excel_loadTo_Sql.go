@@ -56,18 +56,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+
 	fmt.Printf("Set to schema [%v]\n", config.Schema)
 	setSearchPath(db, config.Schema)
 
 	fmt.Println("Inserting Baseline")
 
-	baseline_id := services.InsertBaseline(db, baseline)
+	baselineId := services.InsertBaseline(db, baseline)
 
 	services.ReadBaselineAll(db)
 
 	fmt.Println("Inserting controls")
 	for i := 0; i < len(controls); i++ {
-		controls[i].SetBaselineId(baseline_id)
+		controls[i].SetBaselineId(baselineId)
 		services.InsertControl(db, controls[i])
 
 	}
@@ -109,6 +110,7 @@ func getConnStr(config Config) string {
 
 	return buffer.String()
 }
+
 
 func setSearchPath(db *sql.DB, schema string) {
 

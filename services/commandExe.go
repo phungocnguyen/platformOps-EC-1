@@ -20,10 +20,17 @@ func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string)
 	}
 	stack[i].Stdout = outputBuffer
 	stack[i].Stderr = &errorBuffer
+	var errStr string
 	if err := call(stack, pipeStack); err != nil {
 		fmt.Println ("Encounter Error", string(errorBuffer.Bytes()), err)
+		errStr = err.Error()
 	}
-	return string(errorBuffer.Bytes())
+
+	if errStr != "" && errorBuffer.Bytes() != nil {
+		return fmt.Sprintf("%v\n%v", errStr, string(errorBuffer.Bytes()))
+	}
+
+	return ""
 }
 
 func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
