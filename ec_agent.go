@@ -103,6 +103,7 @@ func executeCommands(baseline []models.ECManifest) {
 		s := b.String()
 
 		resultManifest := models.ECManifestResult{
+
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 			s,
 			dateTimeNow()}
@@ -148,7 +149,6 @@ func getErrorFileName(output string) string {
 	return filepath.Join(filepath.Dir(output), "error_"+filepath.Base(output))
 }
 
-
 func main() {
 
 	var input, output, command, mode string
@@ -187,7 +187,7 @@ func main() {
 	}
 
 }
-func processManifest(input string, output string, mode string) ([]models.ECManifestResult, []models.ECManifestResult){
+func processManifest(input string, output string, mode string) ([]models.ECManifestResult, []models.ECManifestResult) {
 
 	var manifestResults []models.ECManifestResult
 
@@ -217,4 +217,3 @@ func processManifest(input string, output string, mode string) ([]models.ECManif
 	}
 	return manifestResults, manifestErrors
 }
-

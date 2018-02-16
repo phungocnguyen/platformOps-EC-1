@@ -36,8 +36,6 @@ func getConnStr(config Config) string {
 	buffer.WriteString("?sslmode=")
 	buffer.WriteString(config.Sslmode)
 
-	fmt.Println(buffer.String())
-
 	return buffer.String()
 }
 
@@ -165,5 +163,4 @@ func ToSql() {
 
 
 }
-
 
