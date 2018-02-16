@@ -103,7 +103,10 @@ func executeCommands(baseline []models.ECManifest) {
 		s := b.String()
 
 		resultManifest := models.ECManifestResult{
+<<<<<<< HEAD
 
+=======
+>>>>>>> Repackage (#1)
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 			s,
 			dateTimeNow()}
@@ -187,7 +190,11 @@ func main() {
 	}
 
 }
+<<<<<<< HEAD
 func processManifest(input string, output string, mode string) ([]models.ECManifestResult, []models.ECManifestResult) {
+=======
+func processManifest(input string, output string, mode string) ([]models.ECManifestResult, []models.ECManifestResult){
+>>>>>>> Repackage (#1)
 
 	var manifestResults []models.ECManifestResult
 
@@ -216,4 +223,9 @@ func processManifest(input string, output string, mode string) ([]models.ECManif
 		fmt.Printf("- Done writing error to [%v]\n", errorFile)
 	}
 	return manifestResults, manifestErrors
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> Repackage (#1)

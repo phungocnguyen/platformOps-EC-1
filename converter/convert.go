@@ -140,6 +140,7 @@ func ToSql() {
 		log.Fatal(err)
 	}
 
+
 	fmt.Printf("Set to schema [%v]\n", config.Schema)
 	setSearchPath(db, config.Schema)
 
