@@ -81,7 +81,7 @@ func insertBaseline(db *sql.DB, baseline models.Baseline) (genId int) {
 		panic(err)
 	}
 	fmt.Println("New record ID is:", id)
-	baseline.SetId(id)
+	baseline.Id=id
 	return id
 }
 
@@ -117,7 +117,7 @@ func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest{
 func GetCommandByControlId (db *sql.DB, controlId int) models.Command {
 	SetSearchPath(db, "baseline")
 	sqlStatement :=    `SELECT id, cmd, exec_order
-					 	FROM  command  
+					 	FROM  command
 						WHERE control_id = $1;`
 
 	rows, err := db.Query(sqlStatement, controlId)
@@ -184,7 +184,7 @@ func insertControl(db *sql.DB, control models.Control) (genId int) {
 	if err != nil {
 		panic(err)
 	}
-	control.SetId(id)
+	control.Id=id
 	fmt.Println("New record ID is:", id)
 	return id
 }
