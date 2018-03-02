@@ -83,24 +83,22 @@ func executeCommands(baseline []models.ECManifest) {
 	for _, manifest := range baseline {
 		var b bytes.Buffer
 
-		data := manifest.Command
-
 		fmt.Printf("- Executing [%v]\n", manifest.Title)
 
-		result := strings.Split(data, "|")
-		array := make([]*exec.Cmd, len(result))
-		for i := range result {
-			s := strings.TrimSpace(result[i])
-			commands := strings.Split(s, " ")
-			args := commands[1:len(commands)]
-
-			array[i] = exec.Command(commands[0], args...)
+		parsedPipeCommands := strings.Split(manifest.Command , "|")
+		commandsSlice := make([]*exec.Cmd, len(parsedPipeCommands))
+		for i := range parsedPipeCommands {
+			s := strings.TrimSpace(parsedPipeCommands[i])
+			command := strings.Split(s, " ")
+			args := command[1:]
+			fmt.Printf("Current command to execute: %v\n", command)
+			commandsSlice[i] = exec.Command(command[0], args...)
 
 		}
 
-		errorOutput := services.Execute(&b, array)
+		errorOutput := services.Execute(&b, commandsSlice)
 
-		s := b.String()
+		s:= b.String()
 
 		resultManifest := models.ECManifestResult{
 
