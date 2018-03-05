@@ -189,9 +189,6 @@ func main() {
 }
 func processManifest(input string, output string, mode string) ([]models.ECManifestResult, []models.ECManifestResult) {
 
-	var manifestResults []models.ECManifestResult
-
-	var manifestErrors []models.ECManifestResult
 	var baseline []models.ECManifest
 
 	if mode == "local" {
