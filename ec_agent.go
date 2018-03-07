@@ -21,23 +21,16 @@ import (
 /*
 This is a av evidence collection agent:
 
-Usage commands
-Commands:
-run - process manifest and execute commands
-toJson - parse excel spreadsheet to json format
+Usage
 
-
-Options:
 -i Input file
 -c configuration file
--m mode
+-m mode:
+	- toJson (convert excel baseline to json manifest)
+	- local (collect evidence using local input json manifest)
+	- web (collect evidence using manifest from input endpoint url, send json result back to master)
 
 */
-
-var (
-	manifestResults []models.ECManifestResult
-	manifestErrors  []models.ECManifestResult
-)
 
 func getECManifest(manifest string) []models.ECManifest {
 	fmt.Printf("- Parsing manifest [%v]\n", manifest)
@@ -64,8 +57,6 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
-	//decoder := json.NewDecoder(resp.Body)
-	//fmt.Println(decoder.Decode(&baseline))
 
 	body, err := ioutil.ReadAll(resp.Body)
 
@@ -76,10 +67,13 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	}
 
 	json.Unmarshal(body, &baseline)
+
 	return baseline
 }
 
-func executeCommands(baseline []models.ECManifest) {
+func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, []models.ECManifestResult) {
+	var manifestErrors, manifestResults []models.ECManifestResult
+
 	for _, manifest := range baseline {
 		var b bytes.Buffer
 
@@ -118,8 +112,9 @@ func executeCommands(baseline []models.ECManifest) {
 			manifestErrors = append(manifestErrors, errorManifest)
 		}
 	}
-
+	return manifestResults, manifestErrors
 }
+
 func writeToFile(baseline []models.ECManifestResult, output string) {
 	hashString := "##################################"
 	file, err := os.Create(output)
@@ -151,7 +146,7 @@ func getErrorFileName(output string) string {
 
 func main() {
 
-	var input, output, command, mode string
+	var input, output, mode string
 
 	fmt.Println("- Empowered by", models.ECVersion)
 
@@ -160,11 +155,6 @@ func main() {
 	flag.StringVar(&mode, "m", "local", "Run as Web agent or local CLI agent. -m w as Web agent. Default local CLI agent. ")
 
 	flag.Parse()
-
-	if len(flag.Args()) > 0 {
-		command = flag.Args()[0]
-
-	}
 
 	if input == "" {
 		fmt.Println("Missing input manifest. Program will exit.")
@@ -176,33 +166,33 @@ func main() {
 
 	}
 
-	switch command {
-	case "run":
-		processManifest(input, output, mode)
-	case "toJson":
-		converter.ToJson(input, output)
-	default:
-		fmt.Errorf("No command was supplied")
-		os.Exit(1)
+	switch mode {
+		case "toJson":
+			converter.ToJson(input, output)
+		default:
+			processManifest(input, output, mode)
 	}
 
 }
-func processManifest(input string, output string, mode string) ([]models.ECManifestResult, []models.ECManifestResult) {
+
+func processManifest(input string, output string, mode string) {
 
 	var baseline []models.ECManifest
 
 	if mode == "local" {
 		baseline = getECManifest(input)
-	} else {
+	} else if mode == "web"{
 		baseline = getJsonManifestFromMaster(input)
 	}
+
 	if len(baseline) < 1 {
+		fmt.Println("Baseline does not have controls.  Program will exit")
 		os.Exit(1)
 	}
 
 	fmt.Println("- Start executing commands")
 
-	executeCommands(baseline)
+	manifestResults, manifestErrors := executeCommands(baseline)
 
 	writeToFile(manifestResults, output)
 	fmt.Printf("- Done writing to [%v]\n", output)
@@ -212,5 +202,4 @@ func processManifest(input string, output string, mode string) ([]models.ECManif
 		writeToFile(manifestErrors, errorFile)
 		fmt.Printf("- Done writing error to [%v]\n", errorFile)
 	}
-	return manifestResults, manifestErrors
 }
