@@ -16,6 +16,7 @@ import (
 	"platformOps-EC/services"
 	"strings"
 	"time"
+	"path"
 )
 
 /*
@@ -67,55 +68,55 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	}
 
 	json.Unmarshal(body, &baseline)
-
 	return baseline
 }
 
-func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, []models.ECManifestResult) {
-	var manifestErrors, manifestResults []models.ECManifestResult
+func CollectEvidence (baseline []models.ECManifest)  ([]models.ECResult)  {
 
+	var ecResults []models.ECResult
 	for _, manifest := range baseline {
-		var b bytes.Buffer
+		var errorOutputs, resultOutputs []string
 
 		data := manifest.Command
+		if len(data) > 0{
+			fmt.Printf("- Executing [%v]\n", manifest.Title)
+			for c := range data {
+				var b bytes.Buffer
 
-		fmt.Printf("- Executing [%v]\n", manifest.Title)
+				result := strings.Split(data[c], "|")
+				array := make([]*exec.Cmd, len(result))
+				for i := range result {
+					s := strings.TrimSpace(result[i])
+					commands := strings.Split(s, " ")
+					args := commands[1:]
 
-		result := strings.Split(data, "|")
-		array := make([]*exec.Cmd, len(result))
-		for i := range result {
-			s := strings.TrimSpace(result[i])
-			commands := strings.Split(s, " ")
-			args := commands[1:len(commands)]
+					array[i] = exec.Command(commands[0], args...)
+				}
 
-			array[i] = exec.Command(commands[0], args...)
+				errorOutput := services.Execute(&b, array)
+
+				resultOutputs = append(resultOutputs, b.String())
+
+				if errorOutput != "" {
+					errorOutputs = append(errorOutputs, errorOutput)
+				}
+			}
 
 		}
+		resultManifest := models.ECResult{
+			models.ECManifest{manifest.ReqId,manifest.Title, manifest.Command, manifest.Baseline},
+			services.GetHostNameExec(),
+			resultOutputs,
+			errorOutputs,
+			services.DateTimeNow()}
 
-		errorOutput := services.Execute(&b, array)
+		ecResults = append(ecResults, resultManifest)
 
-		s := b.String()
-
-		resultManifest := models.ECManifestResult{
-
-			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-			s,
-			dateTimeNow()}
-
-		manifestResults = append(manifestResults, resultManifest)
-
-		if errorOutput != "" {
-			errorManifest := models.ECManifestResult{
-				models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-				errorOutput,
-				dateTimeNow()}
-			manifestErrors = append(manifestErrors, errorManifest)
-		}
 	}
-	return manifestResults, manifestErrors
+	return ecResults
 }
 
-func writeToFile(baseline []models.ECManifestResult, output string) {
+func writeToFile(baseline []models.ECResult, output string, resultType string, isJson bool) {
 	hashString := "##################################"
 	file, err := os.Create(output)
 	if err != nil {
@@ -123,25 +124,52 @@ func writeToFile(baseline []models.ECManifestResult, output string) {
 	}
 	defer file.Close()
 
-	for i := range baseline {
-		fmt.Fprintf(file, "\n%v", hashString)
-		fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
-		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
-		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
-		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
-		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
-		fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
-		fmt.Fprintf(file, "\n%v\n", hashString)
-		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
+	switch isJson {
+	case true:
+		fmt.Fprint(file, models.ToJson(baseline))
+
+	case false:
+		for i := range baseline {
+			fmt.Fprintf(file, "\n%v", hashString)
+			fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
+			fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
+			fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
+			fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
+			fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
+			fmt.Fprintf(file, "\nHost Exc: %v", baseline[i].HostExec)
+			fmt.Fprintf(file, "\n%v:", "Command")
+			for c := range baseline[i].Command {
+				fmt.Fprintf(file, "\n        [%v]", baseline[i].Command[c] )
+			}
+			fmt.Fprintf(file, "\n%v\n", hashString)
+
+			switch resultType {
+			case "stdOutput":
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdOutput, "\n"))
+			case "stdErrOutput":
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdErrOutput, "\n"))
+			case "both":
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdOutput, "\n"))
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdErrOutput, "\n"))
+			}
+		}
 	}
 }
 
-func dateTimeNow() string {
-	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-}
 
-func getErrorFileName(output string) string {
-	return filepath.Join(filepath.Dir(output), "error_"+filepath.Base(output))
+func getFileName(output string, outputType string) string{
+	var fileName string
+	switch outputType{
+	case "error":
+		fileName = filepath.Join(filepath.Dir(output), outputType+"_"+filepath.Base(output))
+	case "json":
+		ext := path.Ext(output)
+		fileName = output[0:len(output)-len(ext)] + ".json"
+	default:
+		fileName = output
+	}
+
+	return fileName
 }
 
 func main() {
@@ -192,14 +220,20 @@ func processManifest(input string, output string, mode string) {
 
 	fmt.Println("- Start executing commands")
 
-	manifestResults, manifestErrors := executeCommands(baseline)
+	ecResults := CollectEvidence(baseline)
 
-	writeToFile(manifestResults, output)
+	// write result to output file
+	writeToFile(ecResults, output, "stdOutput", false)
 	fmt.Printf("- Done writing to [%v]\n", output)
 
-	if len(manifestErrors) > 0 {
-		errorFile := getErrorFileName(output)
-		writeToFile(manifestErrors, errorFile)
-		fmt.Printf("- Done writing error to [%v]\n", errorFile)
-	}
+	// write error to error output file
+	errorFile := getFileName(output, "error")
+	writeToFile(ecResults, errorFile, "stdErrOutput", false)
+	fmt.Printf("- Done writing error to [%v]\n", errorFile)
+
+	// write both StdOut & StdErrOut to  json file
+	bothFile := getFileName(output, "json")
+	writeToFile(ecResults, bothFile, "", true)
+	fmt.Printf("- Done writing json to [%v]\n", bothFile)
+
 }

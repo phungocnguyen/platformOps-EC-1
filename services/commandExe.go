@@ -5,6 +5,7 @@ import(
 	"bytes"
 	"fmt"
 	"os/exec"
+	"log"
 )
 
 func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string) {
@@ -52,4 +53,12 @@ func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
 		}()
 	}
 	return stack[0].Wait()
+}
+
+func GetHostNameExec() string {
+	out, err := exec.Command("hostname").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fmt.Sprintf("%s", out)
 }
