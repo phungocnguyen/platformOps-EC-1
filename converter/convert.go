@@ -48,6 +48,7 @@ func setSearchPath(db *sql.DB, schema string) {
 		panic(err)
 	}
 }
+<<<<<<< HEAD:converter/convert.go
 
 func getConfig(configFile string) Config {
 	raw, err := ioutil.ReadFile(configFile)
@@ -113,6 +114,73 @@ func ToJson(excelFileName string, output string)  {
 
 func ToSql() {
 
+=======
+
+func getConfig(configFile string) Config {
+	raw, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	var c []Config
+	errj := json.Unmarshal(raw, &c)
+	if errj != nil {
+		fmt.Println("error parsing json input", err)
+	}
+	return c[0]
+}
+
+
+func ToJson(excelFileName string, output string)  {
+
+
+
+	if excelFileName == "" {
+		fmt.Println("Missing input Excel file. Program will exit.")
+		os.Exit(1)
+	}
+
+	if output == "manifest.json" {
+		fmt.Println("Default to manifest.json")
+
+	}
+
+	fmt.Println("Loading Excel file ", excelFileName)
+
+	baseline, controls := services.LoadFromExcel(excelFileName)
+	var manifest []models.ECManifest
+
+	fmt.Println("Converting to Json object")
+
+	for _, c := range controls {
+
+		m := models.ECManifest{ReqId: c.ReqId, Title: c.Category,
+			Baseline: baseline.Name}
+		manifest = append(manifest, m)
+
+	}
+
+	//fmt.Println(models.ToJson(manifest))
+
+	file, err := os.Create(output)
+	if err != nil {
+		log.Fatal("Cannot create file", err)
+	}
+	defer file.Close()
+
+	fmt.Println("Writing Json Object to file")
+
+	fmt.Fprintf(file, "%v", models.ToJson(manifest))
+
+	fmt.Printf("Done writing to output file at [%v]\n", output)
+
+
+}
+
+func ToSql() {
+
+>>>>>>> 184f778c4a7c438cbd5584289cbaf310fe7c470f:converter/convert.go
 
 	if excelFileName == "" {
 		fmt.Println("Missing input excel baseline. Program will exit.")
@@ -161,6 +229,11 @@ func ToSql() {
 	//services.ReadControlByBaselineId(db, baseline_id)
 	fmt.Println("Done inserting Baseline and Controls.  Check DB")
 
+<<<<<<< HEAD:converter/convert.go
 
 }
 
+=======
+
+}
+>>>>>>> 184f778c4a7c438cbd5584289cbaf310fe7c470f:converter/convert.go
