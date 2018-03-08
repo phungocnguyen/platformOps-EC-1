@@ -7,7 +7,7 @@ import (
 )
 
 type ECManifest struct {
-    ReqId    int    `json:"reqId"`
+	ReqId    int    `json:"reqId"`
 	Title    string `json:"title"`
 	Command  string `json:"command"`
 	Baseline string `json:"baseline"`
@@ -15,9 +15,8 @@ type ECManifest struct {
 
 type ECManifestResult struct {
 	ECManifest
-    Output   string `json:"output"`
-    DateExe  string `json:"dateExe"`
-
+	Output  string `json:"output"`
+	DateExe string `json:"dateExe"`
 }
 
 func (p ECManifest) ToString() string {

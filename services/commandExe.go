@@ -1,9 +1,9 @@
 package services
 
-import(
-	"io"
+import (
 	"bytes"
 	"fmt"
+	"io"
 	"os/exec"
 )
 
@@ -22,13 +22,12 @@ func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string)
 	stack[i].Stderr = &errorBuffer
 	var errStr string
 	if err := call(stack, pipeStack); err != nil {
-		fmt.Println ("Encountered Error", string(errorBuffer.Bytes()), err)
+		fmt.Println("Encountered Error", string(errorBuffer.Bytes()), err)
 		errStr = err.Error()
 
 	}
-	errorOutput= string(errorBuffer.Bytes())
+	errorOutput = string(errorBuffer.Bytes())
 	return
-
 
 	if errStr != "" && errorBuffer.Bytes() != nil {
 		return fmt.Sprintf("%v\n%v", errStr, string(errorBuffer.Bytes()))

@@ -1,0 +1,5 @@
+ansible_server="ansible1"
+ansible_server2="ansible2"
+mesos_master="master"
+ldapuserfail="user.adm"
+baseadmin="baseadmin"

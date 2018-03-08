@@ -16,36 +16,42 @@ func loadBaseline(file string) (b models.Baseline) {
 	return models.Baseline{Name: name}
 }
 
-func parseHeaders(sheet *xlsx.Sheet)(int, int, int, int, int, int,int){
+func parseHeaders(sheet *xlsx.Sheet) (int, int, int, int, int, int, int) {
 
-	var startrow, reqIdInd,  CategoryInd, RequirementsInd, DiscussionInd, CheckTextInd, FixTextInd int
+	var startrow, reqIdInd, CategoryInd, RequirementsInd, DiscussionInd, CheckTextInd, FixTextInd int
 
 	rows := sheet.Rows
 
-	for i, r := range rows{
-		if r.Cells[0].Value =="Req #"{
+	for i, r := range rows {
+		if r.Cells[0].Value == "Req #" {
 			startrow = i
 			cells := r.Cells
-			for n, c:= range cells{
+			for n, c := range cells {
 				switch c.Value {
-				case "Req #":{
-					reqIdInd = n
-				}
-				case "Category":{
-					CategoryInd=n
-				}
-				case "Requirements":{
-					RequirementsInd =n
-				}
-				case "Discussion":{
-					DiscussionInd =n
-				}
-				case "Check Text":{
-					CheckTextInd =n
-				}
-				case "Fix Text":{
-					FixTextInd =n
-				}
+				case "Req #":
+					{
+						reqIdInd = n
+					}
+				case "Category":
+					{
+						CategoryInd = n
+					}
+				case "Requirements":
+					{
+						RequirementsInd = n
+					}
+				case "Discussion":
+					{
+						DiscussionInd = n
+					}
+				case "Check Text":
+					{
+						CheckTextInd = n
+					}
+				case "Fix Text":
+					{
+						FixTextInd = n
+					}
 
 				}
 			}
@@ -53,7 +59,6 @@ func parseHeaders(sheet *xlsx.Sheet)(int, int, int, int, int, int,int){
 		}
 	}
 	return startrow, reqIdInd, CategoryInd, RequirementsInd, DiscussionInd, CheckTextInd, FixTextInd
-
 
 }
 func loadControl(file string) (controls []models.Control) {
@@ -75,29 +80,28 @@ func loadControl(file string) (controls []models.Control) {
 
 		reqId, err := cells[reqIdInd].Int()
 
-		if reqId== -1{
-			fmt.Printf("Finished reading the file, loaded %d lines\n",i )
+		if reqId == -1 {
+			fmt.Printf("Finished reading the file, loaded %d lines\n", i)
 			break
 		}
 
 		if err != nil {
 
-			fmt.Printf("error reading reqId on row %d\n",i )
+			fmt.Printf("error reading reqId on row %d\n", i)
 			break
 		}
 
 		//Need to dynamically determine the ones we need
 		control := models.Control{
-			ReqId: reqId,
-			CisId: cells[reqIdInd].String(),
-			Category: cells[CategoryInd].String(),
+			ReqId:       reqId,
+			CisId:       cells[reqIdInd].String(),
+			Category:    cells[CategoryInd].String(),
 			Requirement: cells[RequirementsInd].String(),
-			Discussion: cells[DiscussionInd].String(),
-			CheckText: cells[CheckTextInd].String(),
-			FixText: cells[FixTextInd].String(),
-			RowDesc: cells[reqIdInd].String(),
+			Discussion:  cells[DiscussionInd].String(),
+			CheckText:   cells[CheckTextInd].String(),
+			FixText:     cells[FixTextInd].String(),
+			RowDesc:     cells[reqIdInd].String(),
 		}
-
 
 		controls = append(controls, control)
 	}
