@@ -1,20 +1,18 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	"github.com/codeskyblue/go-sh"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"platformOps-EC/converter"
 	"platformOps-EC/models"
-	"platformOps-EC/services"
-	"strings"
 	"time"
 )
 
@@ -71,43 +69,48 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	return baseline
 }
 
-func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, []models.ECManifestResult) {
+func loadConfigiIntoSession(s *sh.Session, configFile string) {
+	fmt.Printf("- Loading configs [%v]\n", configFile)
+	var config map[string]string
+	_, err := os.Stat(configFile)
+	if err != nil {
+		log.Fatal("Error loading the config: ", configFile)
+		fmt.Printf("Error loading the config: %s/n ", configFile)
+		os.Exit(1)
+	}
+
+	if _, err := toml.DecodeFile(configFile, &config); err != nil {
+		log.Fatal(err)
+	}
+
+	for k, v := range config {
+		s.SetEnv(k, v)
+	}
+
+}
+func executeCommands(baseline []models.ECManifest, session sh.Session) ([]models.ECManifestResult, []models.ECManifestResult) {
 	var manifestErrors, manifestResults []models.ECManifestResult
 
 	for _, manifest := range baseline {
-		var b bytes.Buffer
-
 		data := manifest.Command
 
 		fmt.Printf("- Executing [%v]\n", manifest.Title)
 
-		result := strings.Split(data, "|")
-		array := make([]*exec.Cmd, len(result))
-		for i := range result {
-			s := strings.TrimSpace(result[i])
-			commands := strings.Split(s, " ")
-			args := commands[1:len(commands)]
+		//TODO: refactor to use channels
 
-			array[i] = exec.Command(commands[0], args...)
-
-		}
-
-		errorOutput := services.Execute(&b, array)
-
-		s := b.String()
-
+		out, err := session.Command("bash", "-c", data).Output()
 		resultManifest := models.ECManifestResult{
 
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-			s,
+			string(out),
 			dateTimeNow()}
 
 		manifestResults = append(manifestResults, resultManifest)
 
-		if errorOutput != "" {
+		if err != nil {
 			errorManifest := models.ECManifestResult{
 				models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-				errorOutput,
+				string(err.Error()),
 				dateTimeNow()}
 			manifestErrors = append(manifestErrors, errorManifest)
 		}
@@ -146,12 +149,13 @@ func getErrorFileName(output string) string {
 
 func main() {
 
-	var input, output, mode string
+	var input, output, config, mode string
 
 	fmt.Println("- Empowered by", models.ECVersion)
 
 	flag.StringVar(&input, "i", "", "Input manifest json file. If missing, program will exit.")
 	flag.StringVar(&output, "o", "output.txt", "Execution output location.")
+	flag.StringVar(&config, "c", "config.toml", "External configuration location.")
 	flag.StringVar(&mode, "m", "local", "Run as Web agent or local CLI agent. -m w as Web agent. Default local CLI agent. ")
 
 	flag.Parse()
@@ -167,21 +171,25 @@ func main() {
 	}
 
 	switch mode {
-		case "toJson":
-			converter.ToJson(input, output)
-		default:
-			processManifest(input, output, mode)
+	case "toJson":
+		converter.ToJson(input, output)
+	default:
+
+		session := sh.NewSession()
+		loadConfigiIntoSession(session, config)
+
+		processManifest(input, output, mode, *session)
 	}
 
 }
 
-func processManifest(input string, output string, mode string) {
+func processManifest(input string, output string, mode string, session sh.Session) {
 
 	var baseline []models.ECManifest
 
 	if mode == "local" {
 		baseline = getECManifest(input)
-	} else if mode == "web"{
+	} else if mode == "web" {
 		baseline = getJsonManifestFromMaster(input)
 	}
 
@@ -192,7 +200,7 @@ func processManifest(input string, output string, mode string) {
 
 	fmt.Println("- Start executing commands")
 
-	manifestResults, manifestErrors := executeCommands(baseline)
+	manifestResults, manifestErrors := executeCommands(baseline, session)
 
 	writeToFile(manifestResults, output)
 	fmt.Printf("- Done writing to [%v]\n", output)

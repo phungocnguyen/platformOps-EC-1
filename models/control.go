@@ -1,6 +1,5 @@
 package models
 
-
 type Control struct {
 	Id          int
 	ReqId       int

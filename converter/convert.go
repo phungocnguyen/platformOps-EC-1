@@ -1,19 +1,18 @@
 package converter
 
 import (
-	"fmt"
-	"os"
-	"platformOps-EC/services"
-	"platformOps-EC/models"
-	"log"
-	"database/sql"
 	"bytes"
-	"io/ioutil"
+	"database/sql"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"platformOps-EC/models"
+	"platformOps-EC/services"
 )
+
 var excelFileName, output, configFile string
-
-
 
 type Config struct {
 	Dbname   string `json:"dbname"`
@@ -23,6 +22,7 @@ type Config struct {
 	Location string `json:"location"`
 	Schema   string `json:"currentSchema"`
 }
+
 func getConnStr(config Config) string {
 	var buffer bytes.Buffer
 	buffer.WriteString("postgres://")
@@ -64,10 +64,7 @@ func getConfig(configFile string) Config {
 	return c[0]
 }
 
-
-func ToJson(excelFileName string, output string)  {
-
-
+func ToJson(excelFileName string, output string) {
 
 	if excelFileName == "" {
 		fmt.Println("Missing input Excel file. Program will exit.")
@@ -108,11 +105,9 @@ func ToJson(excelFileName string, output string)  {
 
 	fmt.Printf("Done writing to output file at [%v]\n", output)
 
-
 }
 
 func ToSql() {
-
 
 	if excelFileName == "" {
 		fmt.Println("Missing input excel baseline. Program will exit.")
@@ -140,7 +135,6 @@ func ToSql() {
 		log.Fatal(err)
 	}
 
-
 	fmt.Printf("Set to schema [%v]\n", config.Schema)
 	setSearchPath(db, config.Schema)
 
@@ -153,13 +147,11 @@ func ToSql() {
 	fmt.Println("Inserting controls")
 	for i := 0; i < len(controls); i++ {
 
-		controls[i].BaselineId=baselineId
+		controls[i].BaselineId = baselineId
 		services.InsertControl(db, controls[i])
 
 	}
 
 	//services.ReadControlByBaselineId(db, baseline_id)
 	fmt.Println("Done inserting Baseline and Controls.  Check DB")
-
-
 }

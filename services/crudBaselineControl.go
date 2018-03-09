@@ -81,11 +81,11 @@ func insertBaseline(db *sql.DB, baseline models.Baseline) (genId int) {
 		panic(err)
 	}
 	fmt.Println("New record ID is:", id)
-	baseline.Id=id
+	baseline.Id = id
 	return id
 }
 
-func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest{
+func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest {
 	SetSearchPath(db, "baseline")
 
 	sqlStatement := `SELECT c.req_id, c.category, b.name, c.baseline_id, c.id
@@ -105,7 +105,7 @@ func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest{
 		}
 
 		command := GetCommandByControlId(db, controlId)
-		manifest :=  models.ECManifest{reqId, category, command.Cmd, baselineName}
+		manifest := models.ECManifest{reqId, category, command.Cmd, baselineName}
 		manifests = append(manifests, manifest)
 	}
 	if err := rows.Err(); err != nil {
@@ -114,9 +114,9 @@ func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest{
 	return manifests
 }
 
-func GetCommandByControlId (db *sql.DB, controlId int) models.Command {
+func GetCommandByControlId(db *sql.DB, controlId int) models.Command {
 	SetSearchPath(db, "baseline")
-	sqlStatement :=    `SELECT id, cmd, exec_order
+	sqlStatement := `SELECT id, cmd, exec_order
 					 	FROM  command
 						WHERE control_id = $1;`
 
@@ -133,15 +133,13 @@ func GetCommandByControlId (db *sql.DB, controlId int) models.Command {
 		if err := rows.Scan(&id, &cmd, &exeOrder); err != nil {
 			log.Fatal(err)
 		}
-		command = models.Command{Id: id, Cmd: cmd, ExeOrder: exeOrder, ControlId:controlId}
+		command = models.Command{Id: id, Cmd: cmd, ExeOrder: exeOrder, ControlId: controlId}
 
 	}
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
 	return command
-
-
 
 }
 
@@ -184,7 +182,7 @@ func insertControl(db *sql.DB, control models.Control) (genId int) {
 	if err != nil {
 		panic(err)
 	}
-	control.Id=id
+	control.Id = id
 	fmt.Println("New record ID is:", id)
 	return id
 }
