@@ -1,11 +1,13 @@
 package services
 
-import(
-	"io"
+import (
 	"bytes"
 	"fmt"
-	"os/exec"
+	"github.com/BurntSushi/toml"
+	"io"
 	"log"
+	"os"
+	"os/exec"
 )
 
 func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string) {
@@ -21,17 +23,17 @@ func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string)
 	}
 	stack[i].Stdout = outputBuffer
 	stack[i].Stderr = &errorBuffer
-	var errStr string
+
 	if err := call(stack, pipeStack); err != nil {
-		fmt.Println ("Encountered Error", string(errorBuffer.Bytes()), err)
-		errStr = err.Error()
+		fmt.Printf("Encountered Error %v, %v\n", string(errorBuffer.Bytes()), err)
+		errorOutput = fmt.Sprintf("%v\n", err)
 	}
 
-	if errStr != "" && errorBuffer.Bytes() != nil {
-		return fmt.Sprintf("%v\n%v", errStr, string(errorBuffer.Bytes()))
+	if errorOutput != "" {
+		return fmt.Sprintf("%v\n%v", errorOutput, string(errorBuffer.Bytes()))
 	}
 
-	return ""
+	return
 
 }
 
@@ -56,9 +58,50 @@ func call(stack []*exec.Cmd, pipes []*io.PipeWriter) (err error) {
 }
 
 func GetHostNameExec() string {
-	out, err := exec.Command("hostname").Output()
+	hostname, err := os.Hostname()
+
 	if err != nil {
+		log.Printf("Error getting hostname %v", err)
+		return "NA"
+	}
+
+	return hostname
+}
+
+func SetEnvConfig(config map[string]string) {
+	for k, v := range config {
+		os.Setenv(k, v)
+	}
+}
+
+func UnsetEnvConfig(config map[string]string) {
+	for k := range config {
+		os.Unsetenv(k)
+	}
+}
+
+func PrintEnv(config map[string]string) {
+	for k := range config {
+		fmt.Printf("Key=%v, Value=%v\n", k, os.Getenv(k))
+	}
+}
+
+func LoadConfig(configFile string) (config map[string]string) {
+	fmt.Printf("- Loading configs [%v]\n", configFile)
+	_, err := os.Stat(configFile)
+	if err != nil {
+		log.Fatal("Error loading the config: ", err)
+		fmt.Printf("Error loading the config: %s/n ", configFile)
+		os.Exit(1)
+	}
+
+	if _, err := toml.DecodeFile(configFile, &config); err != nil {
 		log.Fatal(err)
 	}
-	return fmt.Sprintf("%s", out)
+
+	return
+}
+
+func PrintAllEnv() {
+	fmt.Println(os.Environ())
 }
