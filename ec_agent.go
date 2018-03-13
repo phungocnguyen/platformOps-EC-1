@@ -10,13 +10,13 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"platformOps-EC/converter"
 	"platformOps-EC/models"
 	"platformOps-EC/services"
 	"strings"
 	"time"
-	"path"
 )
 
 /*
@@ -25,6 +25,7 @@ This is a av evidence collection agent:
 Usage
 
 -i Input file
+-o Output file
 -c configuration file
 -m mode:
 	- toJson (convert excel baseline to json manifest)
@@ -71,14 +72,14 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	return baseline
 }
 
-func CollectEvidence (baseline []models.ECManifest)  ([]models.ECResult)  {
+func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
 
 	var ecResults []models.ECResult
 	for _, manifest := range baseline {
 		var errorOutputs, resultOutputs []string
 
 		data := manifest.Command
-		if len(data) > 0{
+		if len(data) > 0 {
 			fmt.Printf("- Executing [%v]\n", manifest.Title)
 			for c := range data {
 				var b bytes.Buffer
@@ -104,7 +105,7 @@ func CollectEvidence (baseline []models.ECManifest)  ([]models.ECResult)  {
 
 		}
 		resultManifest := models.ECResult{
-			models.ECManifest{manifest.ReqId,manifest.Title, manifest.Command, manifest.Baseline},
+			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
 			services.GetHostNameExec(),
 			resultOutputs,
 			errorOutputs,
@@ -139,7 +140,7 @@ func writeToFile(baseline []models.ECResult, output string, resultType string, i
 			fmt.Fprintf(file, "\nHost Exc: %v", baseline[i].HostExec)
 			fmt.Fprintf(file, "\n%v:", "Command")
 			for c := range baseline[i].Command {
-				fmt.Fprintf(file, "\n        [%v]", baseline[i].Command[c] )
+				fmt.Fprintf(file, "\n        [%v]", baseline[i].Command[c])
 			}
 			fmt.Fprintf(file, "\n%v\n", hashString)
 
@@ -156,10 +157,9 @@ func writeToFile(baseline []models.ECResult, output string, resultType string, i
 	}
 }
 
-
-func getFileName(output string, outputType string) string{
+func getFileName(output string, outputType string) string {
 	var fileName string
-	switch outputType{
+	switch outputType {
 	case "error":
 		fileName = filepath.Join(filepath.Dir(output), outputType+"_"+filepath.Base(output))
 	case "json":
@@ -174,12 +174,13 @@ func getFileName(output string, outputType string) string{
 
 func main() {
 
-	var input, output, mode string
+	var input, output, config, mode string
 
 	fmt.Println("- Empowered by", models.ECVersion)
 
 	flag.StringVar(&input, "i", "", "Input manifest json file. If missing, program will exit.")
 	flag.StringVar(&output, "o", "output.txt", "Execution output location.")
+	flag.StringVar(&config, "c", "config.toml", "External configuration location.")
 	flag.StringVar(&mode, "m", "local", "Run as Web agent or local CLI agent. -m w as Web agent. Default local CLI agent. ")
 
 	flag.Parse()
@@ -195,10 +196,18 @@ func main() {
 	}
 
 	switch mode {
-		case "toJson":
-			converter.ToJson(input, output)
-		default:
-			processManifest(input, output, mode)
+	case "toJson":
+		converter.ToJson(input, output)
+	default:
+		configMap := services.LoadConfig(config)
+		services.SetEnvConfig(configMap)
+		services.PrintEnv(configMap)
+		//services.PrintAllEnv()
+		processManifest(input, output, mode)
+		services.UnsetEnvConfig(configMap)
+		services.PrintEnv(configMap)
+		//services.PrintAllEnv()
+
 	}
 
 }
@@ -209,7 +218,7 @@ func processManifest(input string, output string, mode string) {
 
 	if mode == "local" {
 		baseline = getECManifest(input)
-	} else if mode == "web"{
+	} else if mode == "web" {
 		baseline = getJsonManifestFromMaster(input)
 	}
 
