@@ -13,7 +13,10 @@ import (
 	"platformOps-EC/converter"
 	"platformOps-EC/models"
 	"time"
+	"strings"
+	"platformOps-EC/services"
 	"os/exec"
+	"bytes"
 )
 
 /*
@@ -96,56 +99,48 @@ func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, [
 	var manifestErrors, manifestResults []models.ECManifestResult
 
 	for _, manifest := range baseline {
+		var b bytes.Buffer
+
 		data := manifest.Command
 
 		fmt.Printf("- Executing [%v]\n", manifest.Title)
-		//TODO: refactor to use channels
 
-		out, err := exec.Command("bash", "-c", data).Output()
+		result := strings.Split(data, "|")
+		array := make([]*exec.Cmd, len(result))
+		for i := range result {
+			s := strings.TrimSpace(result[i])
+			commands := strings.Split(s, " ")
+			args := commands[1:len(commands)]
+
+			array[i] = exec.Command(commands[0], args...)
+
+		}
+
+		errorOutput := services.Execute(&b, array)
+
+		s := b.String()
+
 		resultManifest := models.ECManifestResult{
 
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-			string(out),
+			s,
 			dateTimeNow()}
 
 		manifestResults = append(manifestResults, resultManifest)
 
-		if err != nil {
+		if errorOutput != "" {
 			errorManifest := models.ECManifestResult{
 				models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-				string(err.Error()),
+				errorOutput,
 				dateTimeNow()}
 			manifestErrors = append(manifestErrors, errorManifest)
 		}
 	}
 	return manifestResults, manifestErrors
 }
-
-func writeToFile(baseline []models.ECManifestResult, output string) {
-	hashString := "##################################"
-	file, err := os.Create(output)
-	if err != nil {
-		log.Fatal("Cannot create file", err)
-	}
-	defer file.Close()
-
-	for i := range baseline {
-		fmt.Fprintf(file, "\n%v", hashString)
-		fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
-		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
-		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
-		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
-		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
-		fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
-		fmt.Fprintf(file, "\n%v\n", hashString)
-		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
-	}
-}
-
 func dateTimeNow() string {
 	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 }
-
 func getErrorFileName(output string) string {
 	return filepath.Join(filepath.Dir(output), "error_" + filepath.Base(output))
 }
@@ -216,5 +211,25 @@ func processManifest(input string, output string, mode string, ) {
 		errorFile := getErrorFileName(output)
 		writeToFile(manifestErrors, errorFile)
 		fmt.Printf("- Done writing error to [%v]\n", errorFile)
+	}
+}
+func writeToFile(baseline []models.ECManifestResult, output string) {
+	hashString := "##################################"
+	file, err := os.Create(output)
+	if err != nil {
+		log.Fatal("Cannot create file", err)
+	}
+	defer file.Close()
+
+	for i := range baseline {
+		fmt.Fprintf(file, "\n%v", hashString)
+		fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
+		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
+		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
+		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
+		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
+		fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
+		fmt.Fprintf(file, "\n%v\n", hashString)
+		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
 	}
 }
