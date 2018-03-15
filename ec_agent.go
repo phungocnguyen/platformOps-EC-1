@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/codeskyblue/go-sh"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +13,10 @@ import (
 	"platformOps-EC/converter"
 	"platformOps-EC/models"
 	"time"
+	"strings"
+	"platformOps-EC/services"
+	"os/exec"
+	"bytes"
 )
 
 /*
@@ -69,8 +72,11 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	return baseline
 }
 
-func loadConfigiIntoSession(s *sh.Session, configFile string) {
+
+func loadConfigiIntoSession(configFile string) map[string]string {
 	fmt.Printf("- Loading configs [%v]\n", configFile)
+
+
 	var config map[string]string
 	_, err := os.Stat(configFile)
 	if err != nil {
@@ -84,38 +90,130 @@ func loadConfigiIntoSession(s *sh.Session, configFile string) {
 	}
 
 	for k, v := range config {
-		s.SetEnv(k, v)
+
+		os.Setenv(k, v)
 	}
+	return config
+
 
 }
-func executeCommands(baseline []models.ECManifest, session sh.Session) ([]models.ECManifestResult, []models.ECManifestResult) {
+func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, []models.ECManifestResult) {
 	var manifestErrors, manifestResults []models.ECManifestResult
 
 	for _, manifest := range baseline {
+		var b bytes.Buffer
+
 		data := manifest.Command
 
 		fmt.Printf("- Executing [%v]\n", manifest.Title)
 
-		//TODO: refactor to use channels
+		result := strings.Split(data, "|")
+		array := make([]*exec.Cmd, len(result))
+		for i := range result {
+			s := strings.TrimSpace(result[i])
+			commands := strings.Split(s, " ")
+			args := commands[1:len(commands)]
 
-		out, err := session.Command("bash", "-c", data).Output()
+			array[i] = exec.Command(commands[0], args...)
+
+		}
+
+		errorOutput := services.Execute(&b, array)
+
+		s := b.String()
+
 		resultManifest := models.ECManifestResult{
 
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-			string(out),
+			s,
 			dateTimeNow()}
 
 		manifestResults = append(manifestResults, resultManifest)
 
-		if err != nil {
+		if errorOutput != "" {
 			errorManifest := models.ECManifestResult{
 				models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-				string(err.Error()),
+				errorOutput,
 				dateTimeNow()}
 			manifestErrors = append(manifestErrors, errorManifest)
 		}
 	}
 	return manifestResults, manifestErrors
+}
+func dateTimeNow() string {
+	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+}
+func getErrorFileName(output string) string {
+	return filepath.Join(filepath.Dir(output), "error_" + filepath.Base(output))
+}
+
+func main() {
+
+	var input, output, config, mode string
+
+	fmt.Println("- Empowered by", models.ECVersion)
+
+	flag.StringVar(&input, "i", "", "Input manifest json file. If missing, program will exit.")
+	flag.StringVar(&output, "o", "output.txt", "Execution output location.")
+	flag.StringVar(&config, "c", "config.toml", "External configuration location.")
+	flag.StringVar(&mode, "m", "local", "Run as Web agent or local CLI agent. -m w as Web agent. Default local CLI agent. ")
+
+	flag.Parse()
+
+	env:= loadConfigiIntoSession(config)
+	defer func() {
+		os.Clearenv()
+		for k, _ := range env{
+			os.Unsetenv(k)
+		}
+	}()
+	if input == "" {
+		fmt.Println("Missing input manifest. Program will exit.")
+		os.Exit(1)
+	}
+
+	if output == "output.txt" {
+		fmt.Println("Default to output.txt")
+
+	}
+
+	switch mode {
+	case "toJson":
+		converter.ToJson(input, output)
+	default:
+		processManifest(input, output, mode)
+
+	}
+
+}
+
+func processManifest(input string, output string, mode string, ) {
+
+	var baseline []models.ECManifest
+
+	if mode == "local" {
+		baseline = getECManifest(input)
+	} else if mode == "web" {
+		baseline = getJsonManifestFromMaster(input)
+	}
+
+	if len(baseline) < 1 {
+		fmt.Println("Baseline does not have controls.  Program will exit")
+		os.Exit(1)
+	}
+
+	fmt.Println("- Start executing commands")
+
+	manifestResults, manifestErrors := executeCommands(baseline)
+
+	writeToFile(manifestResults, output)
+	fmt.Printf("- Done writing to [%v]\n", output)
+
+	if len(manifestErrors) > 0 {
+		errorFile := getErrorFileName(output)
+		writeToFile(manifestErrors, errorFile)
+		fmt.Printf("- Done writing error to [%v]\n", errorFile)
+	}
 }
 
 func writeToFile(baseline []models.ECManifestResult, output string) {
@@ -136,78 +234,5 @@ func writeToFile(baseline []models.ECManifestResult, output string) {
 		fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
 		fmt.Fprintf(file, "\n%v\n", hashString)
 		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
-	}
-}
-
-func dateTimeNow() string {
-	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-}
-
-func getErrorFileName(output string) string {
-	return filepath.Join(filepath.Dir(output), "error_"+filepath.Base(output))
-}
-
-func main() {
-
-	var input, output, config, mode string
-
-	fmt.Println("- Empowered by", models.ECVersion)
-
-	flag.StringVar(&input, "i", "", "Input manifest json file. If missing, program will exit.")
-	flag.StringVar(&output, "o", "output.txt", "Execution output location.")
-	flag.StringVar(&config, "c", "config.toml", "External configuration location.")
-	flag.StringVar(&mode, "m", "local", "Run as Web agent or local CLI agent. -m w as Web agent. Default local CLI agent. ")
-
-	flag.Parse()
-
-	if input == "" {
-		fmt.Println("Missing input manifest. Program will exit.")
-		os.Exit(1)
-	}
-
-	if output == "output.txt" {
-		fmt.Println("Default to output.txt")
-
-	}
-
-	switch mode {
-	case "toJson":
-		converter.ToJson(input, output)
-	default:
-
-		session := sh.NewSession()
-		loadConfigiIntoSession(session, config)
-
-		processManifest(input, output, mode, *session)
-	}
-
-}
-
-func processManifest(input string, output string, mode string, session sh.Session) {
-
-	var baseline []models.ECManifest
-
-	if mode == "local" {
-		baseline = getECManifest(input)
-	} else if mode == "web" {
-		baseline = getJsonManifestFromMaster(input)
-	}
-
-	if len(baseline) < 1 {
-		fmt.Println("Baseline does not have controls.  Program will exit")
-		os.Exit(1)
-	}
-
-	fmt.Println("- Start executing commands")
-
-	manifestResults, manifestErrors := executeCommands(baseline, session)
-
-	writeToFile(manifestResults, output)
-	fmt.Printf("- Done writing to [%v]\n", output)
-
-	if len(manifestErrors) > 0 {
-		errorFile := getErrorFileName(output)
-		writeToFile(manifestErrors, errorFile)
-		fmt.Printf("- Done writing error to [%v]\n", errorFile)
 	}
 }

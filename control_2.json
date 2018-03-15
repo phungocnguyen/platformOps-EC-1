@@ -28,6 +28,13 @@
     "title": "Title 5",
     "command": "curl http://google.com",
     "baseline": "Baseline 5  \n will get 301 response code"
+  },
+
+  {
+    "reqId": 6,
+    "title": "Title 5",
+    "command": "man hello",
+    "baseline": "should error out"
   }
 
 ]
