@@ -72,6 +72,7 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	return baseline
 }
 
+
 func loadConfigiIntoSession(configFile string) map[string]string {
 	fmt.Printf("- Loading configs [%v]\n", configFile)
 
@@ -89,6 +90,7 @@ func loadConfigiIntoSession(configFile string) map[string]string {
 	}
 
 	for k, v := range config {
+
 		os.Setenv(k, v)
 	}
 	return config
@@ -147,8 +149,7 @@ func getErrorFileName(output string) string {
 
 func main() {
 
-	var input, output,config,   mode string
-
+	var input, output, config, mode string
 
 	fmt.Println("- Empowered by", models.ECVersion)
 
@@ -181,6 +182,7 @@ func main() {
 		converter.ToJson(input, output)
 	default:
 		processManifest(input, output, mode)
+
 	}
 
 }
@@ -213,6 +215,7 @@ func processManifest(input string, output string, mode string, ) {
 		fmt.Printf("- Done writing error to [%v]\n", errorFile)
 	}
 }
+
 func writeToFile(baseline []models.ECManifestResult, output string) {
 	hashString := "##################################"
 	file, err := os.Create(output)

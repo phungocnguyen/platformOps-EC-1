@@ -2,19 +2,19 @@ package main
 
 import (
 	"github.com/BurntSushi/toml"
-	"log"
-	"strings"
 	"testing"
+	"log"
 	"os"
 	"os/exec"
+
 )
 
 func TestCommandExecutionWithVariables(t *testing.T) {
 
-
 	os.Setenv("BUILD_ID", "123")
 
 	out, _ := exec.Command("echo", os.ExpandEnv("$BUILD_ID")).Output()
+
 
 	if strings.Compare(strings.TrimSuffix(string(out), "\n"), "123") != 0 {
 
@@ -25,17 +25,21 @@ func TestCommandExecutionWithVariables(t *testing.T) {
 
 func TestLoadConfigIntoSession(t *testing.T) {
 
+
 	var config map[string]string
 	configFile := "test-data/ec-config.toml"
 
 	if _, err := toml.DecodeFile(configFile, &config); err != nil {
 		log.Fatal(err)
 	}
+
 	loadConfigiIntoSession(configFile)
 
 	for k, v := range config {
 		if os.Getenv(k) != v {
 			t.Errorf("expected session value %s for key %s, but got %s ", v, k, os.Getenv(k))
+
+
 		}
 	}
 
