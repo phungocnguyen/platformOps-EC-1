@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/codeskyblue/go-sh"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"platformOps-EC/converter"
 	"platformOps-EC/models"
 	"time"
+	"os/exec"
 )
 
 /*
@@ -69,8 +69,10 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	return baseline
 }
 
-func loadConfigiIntoSession(s *sh.Session, configFile string) {
+func loadConfigiIntoSession(configFile string) map[string]string {
 	fmt.Printf("- Loading configs [%v]\n", configFile)
+
+
 	var config map[string]string
 	_, err := os.Stat(configFile)
 	if err != nil {
@@ -84,21 +86,22 @@ func loadConfigiIntoSession(s *sh.Session, configFile string) {
 	}
 
 	for k, v := range config {
-		s.SetEnv(k, v)
+		os.Setenv(k, v)
 	}
+	return config
+
 
 }
-func executeCommands(baseline []models.ECManifest, session sh.Session) ([]models.ECManifestResult, []models.ECManifestResult) {
+func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, []models.ECManifestResult) {
 	var manifestErrors, manifestResults []models.ECManifestResult
 
 	for _, manifest := range baseline {
 		data := manifest.Command
 
 		fmt.Printf("- Executing [%v]\n", manifest.Title)
-
 		//TODO: refactor to use channels
 
-		out, err := session.Command("bash", "-c", data).Output()
+		out, err := exec.Command("bash", "-c", data).Output()
 		resultManifest := models.ECManifestResult{
 
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
@@ -144,12 +147,13 @@ func dateTimeNow() string {
 }
 
 func getErrorFileName(output string) string {
-	return filepath.Join(filepath.Dir(output), "error_"+filepath.Base(output))
+	return filepath.Join(filepath.Dir(output), "error_" + filepath.Base(output))
 }
 
 func main() {
 
-	var input, output, config, mode string
+	var input, output,config,   mode string
+
 
 	fmt.Println("- Empowered by", models.ECVersion)
 
@@ -160,6 +164,13 @@ func main() {
 
 	flag.Parse()
 
+	env:= loadConfigiIntoSession(config)
+	defer func() {
+		os.Clearenv()
+		for k, _ := range env{
+			os.Unsetenv(k)
+		}
+	}()
 	if input == "" {
 		fmt.Println("Missing input manifest. Program will exit.")
 		os.Exit(1)
@@ -174,16 +185,12 @@ func main() {
 	case "toJson":
 		converter.ToJson(input, output)
 	default:
-
-		session := sh.NewSession()
-		loadConfigiIntoSession(session, config)
-
-		processManifest(input, output, mode, *session)
+		processManifest(input, output, mode)
 	}
 
 }
 
-func processManifest(input string, output string, mode string, session sh.Session) {
+func processManifest(input string, output string, mode string, ) {
 
 	var baseline []models.ECManifest
 
@@ -200,7 +207,7 @@ func processManifest(input string, output string, mode string, session sh.Sessio
 
 	fmt.Println("- Start executing commands")
 
-	manifestResults, manifestErrors := executeCommands(baseline, session)
+	manifestResults, manifestErrors := executeCommands(baseline)
 
 	writeToFile(manifestResults, output)
 	fmt.Printf("- Done writing to [%v]\n", output)
