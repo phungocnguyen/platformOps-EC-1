@@ -81,3 +81,7 @@ dist/
 configs
 test_data
 /ec_agent
+/parse_Excel_convertTo_Json
+/parse_Excel_loadTo_Sql
+/ecMaster
+test-data

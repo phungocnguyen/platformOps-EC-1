@@ -33,7 +33,7 @@ func TestLoadConfigIntoSession(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	loadConfigiIntoSession(configFile)
+	loadConfigIntoSession(configFile)
 
 	for k, v := range config {
 		if os.Getenv(k) != v {

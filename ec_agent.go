@@ -2,21 +2,22 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
-	"platformOps-EC/converter"
 	"platformOps-EC/models"
 	"time"
-	"strings"
-	"platformOps-EC/services"
-	"os/exec"
 	"bytes"
+	"strings"
+	"os/exec"
+	"platformOps-EC/services"
+	"path/filepath"
+	"path"
+	"flag"
+	"platformOps-EC/converter"
 )
 
 /*
@@ -25,6 +26,7 @@ This is a av evidence collection agent:
 Usage
 
 -i Input file
+-o Output file
 -c configuration file
 -m mode:
 	- toJson (convert excel baseline to json manifest)
@@ -68,12 +70,10 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 	}
 
 	json.Unmarshal(body, &baseline)
-
 	return baseline
 }
 
-
-func loadConfigiIntoSession(configFile string) map[string]string {
+func loadConfigIntoSession(configFile string) map[string]string {
 	fmt.Printf("- Loading configs [%v]\n", configFile)
 
 
@@ -97,54 +97,115 @@ func loadConfigiIntoSession(configFile string) map[string]string {
 
 
 }
-func executeCommands(baseline []models.ECManifest) ([]models.ECManifestResult, []models.ECManifestResult) {
-	var manifestErrors, manifestResults []models.ECManifestResult
 
+func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
+
+	var ecResults []models.ECResult
 	for _, manifest := range baseline {
-		var b bytes.Buffer
+		var errorOutputs, resultOutputs []string
 
 		data := manifest.Command
+		if len(data) > 0 {
+			fmt.Printf("- Executing [%v]\n", manifest.Title)
+			for c := range data {
+				var b bytes.Buffer
 
-		fmt.Printf("- Executing [%v]\n", manifest.Title)
+				result := strings.Split(data[c], "|")
+				array := make([]*exec.Cmd, len(result))
+				for i := range result {
+					s := strings.TrimSpace(result[i])
+					commands := strings.Split(s, " ")
+					args := commands[1:]
+					wrapperForEnv(args)
+					array[i] = exec.Command(commands[0], args...)
+				}
 
-		result := strings.Split(data, "|")
-		array := make([]*exec.Cmd, len(result))
-		for i := range result {
-			s := strings.TrimSpace(result[i])
-			commands := strings.Split(s, " ")
-			args := commands[1:len(commands)]
+				errorOutput := services.Execute(&b, array)
 
-			array[i] = exec.Command(commands[0], args...)
+				resultOutputs = append(resultOutputs, b.String())
+
+				if errorOutput != "" {
+					errorOutputs = append(errorOutputs, errorOutput)
+				}
+			}
 
 		}
-
-		errorOutput := services.Execute(&b, array)
-
-		s := b.String()
-
-		resultManifest := models.ECManifestResult{
-
+		resultManifest := models.ECResult{
 			models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-			s,
-			dateTimeNow()}
+			services.GetHostNameExec(),
+			resultOutputs,
+			errorOutputs,
+			services.DateTimeNow()}
 
-		manifestResults = append(manifestResults, resultManifest)
+		ecResults = append(ecResults, resultManifest)
 
-		if errorOutput != "" {
-			errorManifest := models.ECManifestResult{
-				models.ECManifest{manifest.ReqId, manifest.Title, manifest.Command, manifest.Baseline},
-				errorOutput,
-				dateTimeNow()}
-			manifestErrors = append(manifestErrors, errorManifest)
+	}
+	return ecResults
+}
+
+func wrapperForEnv(args []string) {
+
+	for k := range args {
+		if strings.Contains(args[k], "$") {
+			args[k] = os.ExpandEnv(args[k])
 		}
 	}
-	return manifestResults, manifestErrors
+
 }
-func dateTimeNow() string {
-	return time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+
+func writeToFile(baseline []models.ECResult, output string, resultType string, isJson bool) {
+	hashString := "##################################"
+	file, err := os.Create(output)
+	if err != nil {
+		log.Fatal("Cannot create file", err)
+	}
+	defer file.Close()
+
+	switch isJson {
+	case true:
+		fmt.Fprint(file, models.ToJson(baseline))
+
+	case false:
+		for i := range baseline {
+			fmt.Fprintf(file, "\n%v", hashString)
+			fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
+			fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
+			fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
+			fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
+			fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
+			fmt.Fprintf(file, "\nHost Exc: %v", baseline[i].HostExec)
+			fmt.Fprintf(file, "\n%v:", "Command")
+			for c := range baseline[i].Command {
+				fmt.Fprintf(file, "\n        [%v]", baseline[i].Command[c])
+			}
+			fmt.Fprintf(file, "\n%v\n", hashString)
+
+			switch resultType {
+			case "stdOutput":
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdOutput, "\n"))
+			case "stdErrOutput":
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdErrOutput, "\n"))
+			case "both":
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdOutput, "\n"))
+				fmt.Fprintf(file, "\n%v\n", strings.Join(baseline[i].StdErrOutput, "\n"))
+			}
+		}
+	}
 }
-func getErrorFileName(output string) string {
-	return filepath.Join(filepath.Dir(output), "error_" + filepath.Base(output))
+
+func getFileName(output string, outputType string) string {
+	var fileName string
+	switch outputType {
+	case "error":
+		fileName = filepath.Join(filepath.Dir(output), outputType+"_"+filepath.Base(output))
+	case "json":
+		ext := path.Ext(output)
+		fileName = output[0:len(output)-len(ext)] + ".json"
+	default:
+		fileName = output
+	}
+
+	return fileName
 }
 
 func main() {
@@ -160,7 +221,7 @@ func main() {
 
 	flag.Parse()
 
-	env:= loadConfigiIntoSession(config)
+	env:= loadConfigIntoSession(config)
 	defer func() {
 		os.Clearenv()
 		for k, _ := range env{
@@ -181,7 +242,10 @@ func main() {
 	case "toJson":
 		converter.ToJson(input, output)
 	default:
+		configMap := services.LoadConfig(config)
+		services.SetEnvConfig(configMap)
 		processManifest(input, output, mode)
+		services.UnsetEnvConfig(configMap)
 
 	}
 
@@ -204,35 +268,21 @@ func processManifest(input string, output string, mode string, ) {
 
 	fmt.Println("- Start executing commands")
 
-	manifestResults, manifestErrors := executeCommands(baseline)
+	ecResults := CollectEvidence(baseline)
 
-	writeToFile(manifestResults, output)
+	// write result to output file
+	writeToFile(ecResults, output, "stdOutput", false)
 	fmt.Printf("- Done writing to [%v]\n", output)
 
-	if len(manifestErrors) > 0 {
-		errorFile := getErrorFileName(output)
-		writeToFile(manifestErrors, errorFile)
-		fmt.Printf("- Done writing error to [%v]\n", errorFile)
-	}
-}
 
-func writeToFile(baseline []models.ECManifestResult, output string) {
-	hashString := "##################################"
-	file, err := os.Create(output)
-	if err != nil {
-		log.Fatal("Cannot create file", err)
-	}
-	defer file.Close()
+	// write error to error output file
+	errorFile := getFileName(output, "error")
+	writeToFile(ecResults, errorFile, "stdErrOutput", false)
+	fmt.Printf("- Done writing error to [%v]\n", errorFile)
 
-	for i := range baseline {
-		fmt.Fprintf(file, "\n%v", hashString)
-		fmt.Fprintf(file, "\nReq Id:   %v", baseline[i].ReqId)
-		fmt.Fprintf(file, "\nTitle:    %v", baseline[i].Title)
-		fmt.Fprintf(file, "\nBaseline: %v", baseline[i].Baseline)
-		fmt.Fprintf(file, "\nDate Exc: %v", baseline[i].DateExe)
-		fmt.Fprintf(file, "\nCommand:  %v", baseline[i].Command)
-		fmt.Fprintf(file, "\nVersion:  %v", models.ECVersion)
-		fmt.Fprintf(file, "\n%v\n", hashString)
-		fmt.Fprintf(file, "\n%v\n", baseline[i].Output)
-	}
+	// write both StdOut & StdErrOut to  json file
+	bothFile := getFileName(output, "json")
+	writeToFile(ecResults, bothFile, "", true)
+	fmt.Printf("- Done writing json to [%v]\n", bothFile)
+
 }
