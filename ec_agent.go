@@ -90,7 +90,7 @@ func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
 					s := strings.TrimSpace(result[i])
 					commands := strings.Split(s, " ")
 					args := commands[1:]
-
+					wrapperForEnv(args)
 					array[i] = exec.Command(commands[0], args...)
 				}
 
@@ -115,6 +115,16 @@ func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
 
 	}
 	return ecResults
+}
+
+func wrapperForEnv(args []string) {
+
+	for k := range args {
+		if strings.Contains(args[k], "$") {
+			args[k] = os.ExpandEnv(args[k])
+		}
+	}
+
 }
 
 func writeToFile(baseline []models.ECResult, output string, resultType string, isJson bool) {
