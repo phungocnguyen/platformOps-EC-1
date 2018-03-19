@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string) {
@@ -100,6 +101,19 @@ func LoadConfig(configFile string) (config map[string]string) {
 	}
 
 	return
+}
+
+func WrapperCliVarsToEnvVars(args []string) {
+
+	for k := range args {
+		if atIdx := strings.Index(args[k], "$"); atIdx == 0 {
+			key := strings.Replace(args[k], "$", "", 1)
+
+			if val, ok := os.LookupEnv(key); ok {
+				args[k] = val
+			}
+		}
+	}
 }
 
 func PrintAllEnv() {

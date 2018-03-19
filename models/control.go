@@ -2,6 +2,7 @@ package models
 
 type Control struct {
 	Id          int
+	Uid         string
 	ReqId       int
 	CisId       string
 	Category    string
@@ -10,5 +11,5 @@ type Control struct {
 	CheckText   string
 	FixText     string
 	RowDesc     string
-	BaselineId  int
+	BaselineUid string
 }

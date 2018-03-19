@@ -86,7 +86,7 @@ func ToJson(excelFileName string, output string) {
 	for _, c := range controls {
 
 		m := models.ECManifest{ReqId: c.ReqId, Title: c.Category,
-			Baseline: baseline.Name}
+			BaselineUid: baseline.Uid}
 		manifest = append(manifest, m)
 
 	}
@@ -140,14 +140,14 @@ func ToSql() {
 
 	fmt.Println("Inserting Baseline")
 
-	baselineId := services.InsertBaseline(db, baseline)
+	services.InsertBaseline(db, baseline)
 
 	services.ReadBaselineAll(db)
 
 	fmt.Println("Inserting controls")
 	for i := 0; i < len(controls); i++ {
 
-		controls[i].BaselineId = baselineId
+		controls[i].BaselineUid = baseline.Uid
 		services.InsertControl(db, controls[i])
 
 	}
