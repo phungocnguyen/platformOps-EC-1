@@ -105,7 +105,7 @@ func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest {
 		}
 
 		commands := GetCommandByControlId(db, controlId)
-		manifest :=  models.ECManifest{reqId, category, getCommandStringArray(commands), baselineName}
+		manifest := models.ECManifest{reqId, category, getCommandStringArray(commands), baselineName}
 		manifests = append(manifests, manifest)
 	}
 	if err := rows.Err(); err != nil {
@@ -116,16 +116,16 @@ func GetManifestByBaselineId(db *sql.DB, baselineId int) []models.ECManifest {
 
 func getCommandStringArray(commands []models.Command) []string {
 	var cmds []string
-	for i:=range commands {
+	for i := range commands {
 		cmds = append(cmds, commands[i].Cmd)
 	}
 
 	return cmds
 }
 
-func GetCommandByControlId (db *sql.DB, controlId int) []models.Command {
+func GetCommandByControlId(db *sql.DB, controlId int) []models.Command {
 	SetSearchPath(db, "baseline")
-	sqlStatement :=    `SELECT id, cmd, exec_order
+	sqlStatement := `SELECT id, cmd, exec_order
 					 	FROM  command  
 						WHERE control_id = $1 ORDER BY exec_order ASC;`
 	rows, err := db.Query(sqlStatement, controlId)
@@ -141,7 +141,7 @@ func GetCommandByControlId (db *sql.DB, controlId int) []models.Command {
 		if err := rows.Scan(&id, &cmd, &exeOrder); err != nil {
 			log.Fatal(err)
 		}
-		command := models.Command{Id: id, Cmd: cmd, ExeOrder: exeOrder, ControlId:controlId}
+		command := models.Command{Id: id, Cmd: cmd, ExeOrder: exeOrder, ControlId: controlId}
 
 		commands = append(commands, command)
 	}

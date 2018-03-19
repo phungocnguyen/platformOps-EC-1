@@ -1,23 +1,23 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"platformOps-EC/models"
-	"time"
-	"bytes"
-	"strings"
 	"os/exec"
-	"platformOps-EC/services"
-	"path/filepath"
 	"path"
-	"flag"
+	"path/filepath"
 	"platformOps-EC/converter"
+	"platformOps-EC/models"
+	"platformOps-EC/services"
+	"strings"
+	"time"
 )
 
 /*
@@ -76,7 +76,6 @@ func getJsonManifestFromMaster(url string) []models.ECManifest {
 func loadConfigIntoSession(configFile string) map[string]string {
 	fmt.Printf("- Loading configs [%v]\n", configFile)
 
-
 	var config map[string]string
 	_, err := os.Stat(configFile)
 	if err != nil {
@@ -94,7 +93,6 @@ func loadConfigIntoSession(configFile string) map[string]string {
 		os.Setenv(k, v)
 	}
 	return config
-
 
 }
 
@@ -221,10 +219,10 @@ func main() {
 
 	flag.Parse()
 
-	env:= loadConfigIntoSession(config)
+	env := loadConfigIntoSession(config)
 	defer func() {
 		os.Clearenv()
-		for k, _ := range env{
+		for k, _ := range env {
 			os.Unsetenv(k)
 		}
 	}()
@@ -251,7 +249,7 @@ func main() {
 
 }
 
-func processManifest(input string, output string, mode string, ) {
+func processManifest(input string, output string, mode string) {
 
 	var baseline []models.ECManifest
 
@@ -273,7 +271,6 @@ func processManifest(input string, output string, mode string, ) {
 	// write result to output file
 	writeToFile(ecResults, output, "stdOutput", false)
 	fmt.Printf("- Done writing to [%v]\n", output)
-
 
 	// write error to error output file
 	errorFile := getFileName(output, "error")

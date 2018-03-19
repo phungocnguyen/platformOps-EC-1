@@ -3,11 +3,11 @@ package services
 import (
 	"bytes"
 	"fmt"
-	"io"
-	"os/exec"
 	"github.com/BurntSushi/toml"
+	"io"
 	"log"
 	"os"
+	"os/exec"
 )
 
 func Execute(outputBuffer *bytes.Buffer, stack []*exec.Cmd) (errorOutput string) {

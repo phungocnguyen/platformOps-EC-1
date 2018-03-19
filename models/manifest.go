@@ -7,11 +7,10 @@ import (
 )
 
 type ECManifest struct {
-
-	ReqId    int    	`json:"reqId"`
-	Title    string 	`json:"title"`
-	Command  []string	`json:"command"`
-	Baseline string 	`json:"baseline"`
+	ReqId    int      `json:"reqId"`
+	Title    string   `json:"title"`
+	Command  []string `json:"command"`
+	Baseline string   `json:"baseline"`
 }
 
 type ECManifestResult struct {
@@ -22,10 +21,10 @@ type ECManifestResult struct {
 
 type ECResult struct {
 	ECManifest
-	HostExec		string `json:"host"`
-	StdOutput		[]string `json:"stdOutput"`
-	StdErrOutput	[]string `json:"stdErrOutput"`
-	DateExe			string `json:"dateExe"`
+	HostExec     string   `json:"host"`
+	StdOutput    []string `json:"stdOutput"`
+	StdErrOutput []string `json:"stdErrOutput"`
+	DateExe      string   `json:"dateExe"`
 }
 
 func (p ECManifest) ToString() string {
