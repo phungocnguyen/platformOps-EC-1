@@ -167,13 +167,6 @@ func main() {
 
 	flag.Parse()
 
-	env := services.LoadConfig(config)
-	defer func() {
-		os.Clearenv()
-		for k, _ := range env {
-			os.Unsetenv(k)
-		}
-	}()
 	if input == "" {
 		fmt.Println("Missing input manifest. Program will exit.")
 		os.Exit(1)
@@ -188,10 +181,13 @@ func main() {
 	case "toJson":
 		converter.ToJson(input, output)
 	default:
-		configMap := services.LoadConfig(config)
-		services.SetEnvConfig(configMap)
+		if _, err := os.Stat(config); err == nil {
+			configMap := services.LoadConfig(config)
+			services.SetEnvConfig(configMap)
+			defer services.UnsetEnvConfig(configMap)
+		}
+
 		processManifest(input, output, mode)
-		services.UnsetEnvConfig(configMap)
 
 	}
 
