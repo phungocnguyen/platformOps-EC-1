@@ -29,11 +29,16 @@
     "command": ["curl http://google.com"],
     "baseline": "Baseline 5  \n will get 301 response code"
   },
-
   {
     "reqId": 6,
-    "title": "Title 5",
+    "title": "Title 6",
     "command": "man hello",
     "baseline": "should error out"
+  },
+  {
+    "reqId": 7,
+    "title": "Title 7",
+    "command": ["date", "ls -l $HOME/Projects/EC/releases/* | grep agent"],
+    "baseline": "Handle combination of wildcard and environment variable"
   }
 ]

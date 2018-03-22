@@ -61,7 +61,7 @@ func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
 
 		data := manifest.Command
 		if len(data) > 0 {
-			fmt.Printf("- Executing [%v]\n", manifest.Title)
+			fmt.Printf("- Executing [%v], [%v]\n", manifest.Title, manifest.ReqId)
 			for c := range data {
 				var b bytes.Buffer
 
@@ -69,10 +69,16 @@ func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
 				array := make([]*exec.Cmd, len(result))
 				for i := range result {
 					s := strings.TrimSpace(result[i])
-					commands := strings.Split(s, " ")
-					args := commands[1:]
-					services.WrapperCliVarsToEnvVars(args)
-					array[i] = exec.Command(commands[0], args...)
+					// if command argument has wildcard *, invoke C Shell
+					if atIdx := strings.Index(result[i], "*"); atIdx > 0 {
+						services.WrapperCliVarsToEnvVars(result)
+						array[i] = exec.Command("/bin/sh", "-c", result[i])
+					} else {
+						commands := strings.Split(s, " ")
+						args := commands[1:]
+						services.WrapperCliVarsToEnvVars(args)
+						array[i] = exec.Command(commands[0], args...)
+					}
 				}
 
 				errorOutput := services.Execute(&b, array)
@@ -82,6 +88,7 @@ func CollectEvidence(baseline []models.ECManifest) []models.ECResult {
 				if errorOutput != "" {
 					errorOutputs = append(errorOutputs, errorOutput)
 				}
+
 			}
 
 		}
